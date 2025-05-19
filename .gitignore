@@ -4,7 +4,7 @@
 .pub-cache/
 build/
 # If you use coverage
-coverage/
+# coverage/
 
 # IDEs and editors
 .idea/
