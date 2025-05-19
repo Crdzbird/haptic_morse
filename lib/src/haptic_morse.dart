@@ -122,7 +122,8 @@ final class HapticMorse {
   final String _charReference; // Reference string for characters
   final String _numericReference; // Reference string for digits
 
-  static var intRegex = RegExp(r'^(?:-?(?:0|[1-9][0-9]*))$');
+  RegExp get intRegex =>
+      RegExp('^(${_numericReference.toUpperCase().split('').join('|')})\$');
 
   /// Finds the index of a character in the appropriate reference map.
   ///
