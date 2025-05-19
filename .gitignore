@@ -1,7 +1,28 @@
-# https://dart.dev/guides/libraries/private-files
-# Created by `dart pub`
+# Dart/Pub related
 .dart_tool/
+.packages
+.pub-cache/
+build/
+# If you use coverage
+coverage/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
 
 # Avoid committing pubspec.lock for library packages; see
 # https://dart.dev/guides/libraries/private-files#pubspeclock.
 pubspec.lock
+
+# Flutter related
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-versions
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool/
