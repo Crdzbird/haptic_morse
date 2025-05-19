@@ -1,3 +1,8 @@
+
+## 1.0.2
+
+- Integrated custom symbol reference.
+
 ## 1.0.1
 
 - Custom numeric regex validation
