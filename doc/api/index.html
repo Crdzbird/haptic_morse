@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="haptic_morse API docs, for the Dart programming language.">
+  <title>haptic_morse - Dart API docs</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="static-assets/github.css?v1">
+  <link rel="stylesheet" href="static-assets/styles.css?v1">
+  <link rel="icon" href="static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="https://github.com/Crdzbird/haptic_morse">haptic_morse package</a></li>
+  </ol>
+  <div class="self-name">haptic_morse</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <div class="toggle" id="theme-button" title="Toggle brightness">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span id="dark-theme-button" class="material-symbols-outlined">
+        dark_mode
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        light_mode
+      </span>
+    </label>
+  </div>
+</header>
+<main>
+  <div id="dartdoc-main-content" class="main-content">
+      
+<section class="desc markdown">
+  <h1 id="-hapticmorse-">🌟 HapticMorse 💥</h1>
+<p><em>Your Words, in Vibes &amp; Dashes</em></p>
+<p><a href="#"><img src="https://img.shields.io/badge/coverage-100%25-brightgreen.svg" alt="codecov"></a>
+<a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-Stable-blue.svg" alt="Dart"></a>
+<a href="#"><img src="https://img.shields.io/badge/Powered_By-Haptics-ff69b4.svg" alt="Vibration-Powered"></a></p>
+<hr>
+<h2 id="-introduction">🚀 Introduction</h2>
+<p><strong>HapticMorse</strong> is a powerful, customizable Dart library that brings <strong>Morse code</strong> to life — not just in symbols, but in <strong>vibrations</strong>. Whether you're building accessibility tools, games, messaging apps, or just love Morse code (who doesn’t?), this package translates any text input into:</p>
+<p>✨ <strong>Readable Morse Code</strong>
+📳 <strong>Haptic Feedback Patterns</strong>
+🔠 <strong>Custom Symbol Mappings</strong> — including <strong>non-Latin</strong> characters!</p>
+<p>All wrapped in a single elegant, performant class.</p>
+<hr>
+<h2 id="-features">🎯 Features</h2>
+<ul>
+<li>🔠 Convert text (<code>A-Z</code>, <code>0-9</code>) to <strong>Morse code</strong> strings (<code>.-- --- .-. -.. ...</code>)</li>
+<li>📳 Generate <strong>haptic patterns</strong> for dots, dashes, and all gaps</li>
+<li>🧩 Fully <strong>customizable character &amp; digit mappings</strong> — even for <strong>non-Latin</strong> alphabets!</li>
+<li>⚙️ Custom <strong>timing control</strong> (dot, dash, gaps) for complete UX freedom</li>
+<li>🧠 Smart parsing &amp; fallback for unsupported characters</li>
+<li>✅ <strong>100% Test Coverage</strong> — we've tested every buzz 💯</li>
+</ul>
+<hr>
+<h2 id="-international--custom-support">🌍 International &amp; Custom Support</h2>
+<p>You’re not limited to just English! Add <strong>custom mappings</strong> for other languages, symbols, or even <strong>emoji-based Morse</strong> (yes, that's a thing now).</p>
+<pre class="language-dart"><code class="language-dart">final morse = HapticMorse.custom(
+  charMap: ['.-', '-...', '☀️-', '💧💧'], // Your custom Morse patterns
+  charReference: 'AB日水', // Must match the map's order
+  numericMap: ['...', '...-', '💎', '🌙'],
+  numericReference: '0123', // Also in order
+);
+</code></pre>
+<p>Now this works:</p>
+<pre class="language-dart"><code class="language-dart">final output = morse.convertTextToMorseString("AB日水");
+print(output); // .- -... ☀️- 💧💧
+</code></pre>
+<p>🎉 Boom — custom Morse for <strong>Japanese Kanji, emoji, or anything</strong> your heart desires.</p>
+<hr>
+<h2 id="-usage">🛠️ Usage</h2>
+<h3 id="-default-usage">✅ Default Usage</h3>
+<pre class="language-dart"><code class="language-dart">final morse = HapticMorse();
+
+final text = "HELLO WORLD";
+final result = morse.convertTextToMorseMap(text);
+
+print(result['morseString']); // ".... . .-.. .-.. --- / .-- --- .-. .-.. -.."
+print(result['hapticDurations']); // [100, 100, 100, 300, ...]
+</code></pre>
+<h3 id="-with-custom-timings">🔧 With Custom Timings</h3>
+<pre class="language-dart"><code class="language-dart">final morse = HapticMorse.custom(
+  dotDuration: 80,
+  dashDuration: 240,
+  gapSymbolDuration: 80,
+  gapLetterDuration: 240,
+  gapWordDuration: 600,
+);
+</code></pre>
+<hr>
+<h2 id="-api-overview">📦 API Overview</h2>
+<h3 id="-converttexttomorsestringstring--string">🧩 <code>convertTextToMorseString(String?) → String?</code></h3>
+<p>Returns a Morse code string using dots (<code>.</code>) and dashes (<code>-</code>), separating words with <code>/</code>.</p>
+<h3 id="-converttexttohapticpatternstring--listint">🎵 <code>convertTextToHapticPattern(String?) → List&lt;int&gt;</code></h3>
+<p>Returns a list of vibration durations for:</p>
+<ul>
+<li>🔹 Dot</li>
+<li>🔸 Dash</li>
+<li>⏱ Symbol/letter/word gaps</li>
+</ul>
+<h3 id="-converttexttomorsemapstring--mapstring-dynamic">🔄 <code>convertTextToMorseMap(String?) → Map&lt;String, dynamic&gt;</code></h3>
+<p>Returns a rich object with:</p>
+<ul>
+<li><code>morseString</code></li>
+<li><code>hapticDurations</code></li>
+<li><code>hapticCount</code></li>
+</ul>
+<hr>
+<h2 id="-test-coverage">🧪 Test Coverage</h2>
+<p>✅ <strong>100% Test Coverage</strong>
+This library is thoroughly tested — every line, every case, every buzz! 🧪
+You're in safe, vibrating hands. 💯</p>
+<hr>
+<h2 id="-use-cases">💡 Use Cases</h2>
+<ul>
+<li>🔔 Silent alerts &amp; accessibility tools</li>
+<li>🎮 Hidden messages in games</li>
+<li>🧏 Support for the hearing impaired</li>
+<li>💬 Secret Morse-coded chat apps</li>
+<li>🧠 Educational tools</li>
+<li>🌐 <strong>Multi-lingual &amp; emoji Morse messages!</strong></li>
+</ul>
+<hr>
+<h2 id="-resources">📚 Resources</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Morse_code">International Morse Code</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Vibration_API">Vibration API</a></li>
+</ul>
+<hr>
+<h2 id="-contribute">👏 Contribute</h2>
+<p>Got a new idea or feedback? PRs and issues are always welcome!
+Let’s make text <strong>feel</strong> awesome! 💥</p>
+<hr>
+<h2 id="-license">📜 License</h2>
+<p>MIT License. Vibrate responsibly. 😎</p>
+</section>
+
+
+      <section class="summary">
+          <h2>Libraries</h2>
+        <dl>
+          <dt id="haptic_morse">
+  <span class="name"><a href="haptic_morse">haptic_morse</a></span> 
+
+</dt>
+<dd>
+</dd>
+
+        </dl>
+      </section>
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="https://github.com/Crdzbird/haptic_morse">haptic_morse package</a></li>
+</ol>
+
+    <h5 class="hidden-xs"><span class="package-name">haptic_morse</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="haptic_morse">haptic_morse</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div>
+</main>
+<footer>
+  <span class="no-break">
+    haptic_morse
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="static-assets/highlight.pack.js?v1"></script>
+<script src="static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

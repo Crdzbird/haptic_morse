@@ -55,16 +55,16 @@ final class HapticMorse {
     int? gapLetterDuration,
     int? gapWordDuration,
   }) : this._(
-         charMap: charMap,
-         charReference: charReference,
-         numericMap: numericMap,
-         numericReference: numericReference,
-         dotDuration: dotDuration,
-         dashDuration: dashDuration,
-         gapSymbolDuration: gapSymbolDuration,
-         gapLetterDuration: gapLetterDuration,
-         gapWordDuration: gapWordDuration,
-       );
+          charMap: charMap,
+          charReference: charReference,
+          numericMap: numericMap,
+          numericReference: numericReference,
+          dotDuration: dotDuration,
+          dashDuration: dashDuration,
+          gapSymbolDuration: gapSymbolDuration,
+          gapLetterDuration: gapLetterDuration,
+          gapWordDuration: gapWordDuration,
+        );
 
   /// Private constructor with defaulted values
   const HapticMorse._({
@@ -77,15 +77,15 @@ final class HapticMorse {
     int? gapSymbolDuration,
     int? gapLetterDuration,
     int? gapWordDuration,
-  }) : _charMap = charMap ?? _defaultCharMap,
-       _charReference = charReference ?? _defaultCharReference,
-       _numericMap = numericMap ?? _defaultNumericMap,
-       _numericReference = numericReference ?? _defaultNumericReference,
-       _dotDuration = dotDuration ?? 100,
-       _dashDuration = dashDuration ?? 300,
-       _gapSymbolDuration = gapSymbolDuration ?? 100,
-       _gapLetterDuration = gapLetterDuration ?? 300,
-       _gapWordDuration = gapWordDuration ?? 700;
+  })  : _charMap = charMap ?? _defaultCharMap,
+        _charReference = charReference ?? _defaultCharReference,
+        _numericMap = numericMap ?? _defaultNumericMap,
+        _numericReference = numericReference ?? _defaultNumericReference,
+        _dotDuration = dotDuration ?? 100,
+        _dashDuration = dashDuration ?? 300,
+        _gapSymbolDuration = gapSymbolDuration ?? 100,
+        _gapLetterDuration = gapLetterDuration ?? 300,
+        _gapWordDuration = gapWordDuration ?? 700;
 
   // Default character Morse code map (A-Z)
   static const List<String> _defaultCharMap = [
@@ -180,10 +180,9 @@ final class HapticMorse {
       isFirstWord = false;
 
       // Get the morse code pattern for this character
-      final morsePattern =
-          charIndex.$1 == false
-              ? _charMap[charIndex.$2]
-              : _numericMap[charIndex.$2];
+      final morsePattern = charIndex.$1 == false
+          ? _charMap[charIndex.$2]
+          : _numericMap[charIndex.$2];
 
       // Add haptic durations for each symbol (dot/dash)
       for (var j = 0; j < morsePattern.length; j++) {
@@ -237,10 +236,9 @@ final class HapticMorse {
       if (!isFirstCharacter) morseText.write(' ');
 
       // Get the morse code for this character
-      final morse =
-          charIndex.$1 == false
-              ? _charMap[charIndex.$2]
-              : _numericMap[charIndex.$2];
+      final morse = charIndex.$1 == false
+          ? _charMap[charIndex.$2]
+          : _numericMap[charIndex.$2];
 
       morseText.write(morse);
       isFirstCharacter = false;

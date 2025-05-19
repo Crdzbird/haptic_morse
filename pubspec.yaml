@@ -1,14 +1,19 @@
 name: haptic_morse
-description: A starting point for Dart libraries or applications.
+description: 🔠📳 Convert text to Morse code and haptic vibration patterns in Dart.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/Crdzbird/haptic_morse
+platform:
+  - Android
+  - iOS
+  - Web
+  - Linux
+  - macOS
+  - Windows
+
+homepage: https://github.com/Crdzbird/haptic_morse
 
 environment:
-  sdk: ^3.7.2
-
-# Add regular dependencies here.
-dependencies:
-  # path: ^1.8.0
+  sdk: ^3.0.0
 
 dev_dependencies:
   lints: ^5.0.0
