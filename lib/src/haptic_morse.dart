@@ -122,7 +122,13 @@ final class HapticMorse {
   final String _charReference; // Reference string for characters
   final String _numericReference; // Reference string for digits
 
-  RegExp get intRegex =>
+  /// Regular expression to match numeric characters based on the numeric reference.
+  ///
+  /// This regex is used to identify if a character is a digit based on the provided numeric reference.
+  /// The regex is constructed to match any character in the numeric reference string.
+  /// For example, if the numeric reference is "0123456789", the regex will match any of these digits.
+  /// The regex is case-insensitive.
+  RegExp get _intRegex =>
       RegExp('^(${_numericReference.toUpperCase().split('').join('|')})\$');
 
   /// Finds the index of a character in the appropriate reference map.
@@ -134,7 +140,7 @@ final class HapticMorse {
   /// Returns null if the character is not found in any reference map.
   (bool isInt, int)? _findCharacterIndex(String character) {
     final char = character.toUpperCase();
-    if (intRegex.hasMatch(character)) {
+    if (_intRegex.hasMatch(character)) {
       // Try to find in numeric reference map
       final numIndex = _numericReference.indexOf(char);
       if (numIndex >= 0 && numIndex < _numericMap.length) {
