@@ -142,5 +142,27 @@ void main() {
         expect(hapticMorse.convertTextToHapticPattern('123'), isNotEmpty);
       },
     );
+
+    test('Custom symbol reference', () {
+      final custom = HapticMorse.custom(
+        symbolReference: '💀',
+        charMap: [
+          '💀-',
+          '-💀💀💀',
+          '-💀-💀',
+          '-💀💀',
+          '💀',
+          '💀💀-💀',
+          '--💀',
+          '💀💀💀💀',
+          '💀💀',
+          '💀--💀💀💀',
+          '-💀-',
+          '💀-💀💀💀',
+        ],
+      );
+      expect(custom.convertTextToMorseString('code ded'),
+          '-💀-💀 -💀💀 💀 / -💀💀 💀 -💀💀');
+    });
   });
 }

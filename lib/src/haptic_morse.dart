@@ -26,6 +26,8 @@ final class HapticMorse {
     int? gapSymbolDuration,
     int? gapLetterDuration,
     int? gapWordDuration,
+    String? symbolReference,
+    String? dashReference,
   }) {
     return HapticMorse._(
       charMap: charMap,
@@ -37,6 +39,8 @@ final class HapticMorse {
       gapSymbolDuration: gapSymbolDuration,
       gapLetterDuration: gapLetterDuration,
       gapWordDuration: gapWordDuration,
+      symbolReference: symbolReference,
+      dashReference: dashReference,
     );
   }
 
@@ -54,6 +58,7 @@ final class HapticMorse {
     int? gapSymbolDuration,
     int? gapLetterDuration,
     int? gapWordDuration,
+    String? symbolReference,
   }) : this._(
           charMap: charMap,
           charReference: charReference,
@@ -64,6 +69,7 @@ final class HapticMorse {
           gapSymbolDuration: gapSymbolDuration,
           gapLetterDuration: gapLetterDuration,
           gapWordDuration: gapWordDuration,
+          symbolReference: symbolReference,
         );
 
   /// Private constructor with defaulted values
@@ -77,6 +83,8 @@ final class HapticMorse {
     int? gapSymbolDuration,
     int? gapLetterDuration,
     int? gapWordDuration,
+    String? symbolReference,
+    String? dashReference,
   })  : _charMap = charMap ?? _defaultCharMap,
         _charReference = charReference ?? _defaultCharReference,
         _numericMap = numericMap ?? _defaultNumericMap,
@@ -85,7 +93,8 @@ final class HapticMorse {
         _dashDuration = dashDuration ?? 300,
         _gapSymbolDuration = gapSymbolDuration ?? 100,
         _gapLetterDuration = gapLetterDuration ?? 300,
-        _gapWordDuration = gapWordDuration ?? 700;
+        _gapWordDuration = gapWordDuration ?? 700,
+        _symbolReference = symbolReference ?? '.';
 
   // Default character Morse code map (A-Z)
   static const List<String> _defaultCharMap = [
@@ -121,6 +130,7 @@ final class HapticMorse {
   final List<String> _numericMap;
   final String _charReference; // Reference string for characters
   final String _numericReference; // Reference string for digits
+  final String _symbolReference; // Reference for dot symbol
 
   /// Regular expression to match numeric characters based on the numeric reference.
   ///
@@ -194,7 +204,7 @@ final class HapticMorse {
       // Add haptic durations for each symbol (dot/dash)
       for (var j = 0; j < morsePattern.length; j++) {
         hapticPattern.add(
-          morsePattern[j] == '.' ? _dotDuration : _dashDuration,
+          morsePattern[j] == _symbolReference ? _dotDuration : _dashDuration,
         );
 
         // Add gap between symbols (except after the last symbol)
