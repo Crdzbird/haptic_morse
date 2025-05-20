@@ -1,6 +1,11 @@
 
 # 🌟 HapticMorse 💥
 
+[![pub package](https://img.shields.io/pub/v/haptic_morse.svg)](https://pub.dev/packages/haptic_morse)
+[![pub points](https://img.shields.io/pub/points/haptic_morse.svg)](https://pub.dev/packages/haptic_morse/score)
+
+
+
 *Your Words, in Vibes & Dashes*
 
 [![codecov](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](#)
@@ -80,6 +85,47 @@ final morse = HapticMorse.custom(
   gapLetterDuration: 240,
   gapWordDuration: 600,
 );
+```
+
+### ⛓️ Extended from String Directly
+
+```dart
+final morse = 'HELLO WORLD'.toMorseString({
+  List<String>? charMap,
+  String? charReference,
+  List<String>? numericMap,
+  String? numericReference,
+  int? dotDuration,
+  int? dashDuration,
+  int? gapSymbolDuration,
+  int? gapLetterDuration,
+  int? gapWordDuration,
+  String? symbolReference,
+});
+final morse2 = 'HELLO WORLD'.toMorseMap({
+  List<String>? charMap,
+  String? charReference,
+  List<String>? numericMap,
+  String? numericReference,
+  int? dotDuration,
+  int? dashDuration,
+  int? gapSymbolDuration,
+  int? gapLetterDuration,
+  int? gapWordDuration,
+  String? symbolReference,
+});
+final morse3 = 'HELLO WORLD'.toHapticPattern({
+  List<String>? charMap,
+  String? charReference,
+  List<String>? numericMap,
+  String? numericReference,
+  int? dotDuration,
+  int? dashDuration,
+  int? gapSymbolDuration,
+  int? gapLetterDuration,
+  int? gapWordDuration,
+  String? symbolReference,
+});
 ```
 
 ---

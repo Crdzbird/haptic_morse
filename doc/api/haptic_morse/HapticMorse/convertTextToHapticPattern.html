@@ -99,15 +99,14 @@ would indicate pause duration (though all gaps are positive here).</p>
     isFirstWord = false;
 
     &#47;&#47; Get the morse code pattern for this character
-    final morsePattern =
-        charIndex.$1 == false
-            ? _charMap[charIndex.$2]
-            : _numericMap[charIndex.$2];
+    final morsePattern = charIndex.$1 == false
+        ? _charMap[charIndex.$2]
+        : _numericMap[charIndex.$2];
 
     &#47;&#47; Add haptic durations for each symbol (dot&#47;dash)
     for (var j = 0; j &lt; morsePattern.length; j++) {
       hapticPattern.add(
-        morsePattern[j] == &#39;.&#39; ? _dotDuration : _dashDuration,
+        morsePattern[j] == _symbolReference ? _dotDuration : _dashDuration,
       );
 
       &#47;&#47; Add gap between symbols (except after the last symbol)
@@ -151,7 +150,7 @@ would indicate pause duration (though all gaps are positive here).</p>
 <footer>
   <span class="no-break">
     haptic_morse
-      1.0.0
+      1.0.3
   </span>
   
 </footer>

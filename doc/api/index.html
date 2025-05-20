@@ -47,6 +47,8 @@
       
 <section class="desc markdown">
   <h1 id="-hapticmorse-">🌟 HapticMorse 💥</h1>
+<p><a href="https://pub.dev/packages/haptic_morse"><img src="https://img.shields.io/pub/v/haptic_morse.svg" alt="pub package"></a>
+<a href="https://pub.dev/packages/haptic_morse/score"><img src="https://img.shields.io/pub/points/haptic_morse.svg" alt="pub points"></a></p>
 <p><em>Your Words, in Vibes &amp; Dashes</em></p>
 <p><a href="#"><img src="https://img.shields.io/badge/coverage-100%25-brightgreen.svg" alt="codecov"></a>
 <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-Stable-blue.svg" alt="Dart"></a>
@@ -102,6 +104,44 @@ print(result['hapticDurations']); // [100, 100, 100, 300, ...]
   gapLetterDuration: 240,
   gapWordDuration: 600,
 );
+</code></pre>
+<h3 id="-extended-from-string-directly">⛓️ Extended from String Directly</h3>
+<pre class="language-dart"><code class="language-dart">final morse = 'HELLO WORLD'.toMorseString({
+  List&lt;String&gt;? charMap,
+  String? charReference,
+  List&lt;String&gt;? numericMap,
+  String? numericReference,
+  int? dotDuration,
+  int? dashDuration,
+  int? gapSymbolDuration,
+  int? gapLetterDuration,
+  int? gapWordDuration,
+  String? symbolReference,
+});
+final morse2 = 'HELLO WORLD'.toMorseMap({
+  List&lt;String&gt;? charMap,
+  String? charReference,
+  List&lt;String&gt;? numericMap,
+  String? numericReference,
+  int? dotDuration,
+  int? dashDuration,
+  int? gapSymbolDuration,
+  int? gapLetterDuration,
+  int? gapWordDuration,
+  String? symbolReference,
+});
+final morse3 = 'HELLO WORLD'.toHapticPattern({
+  List&lt;String&gt;? charMap,
+  String? charReference,
+  List&lt;String&gt;? numericMap,
+  String? numericReference,
+  int? dotDuration,
+  int? dashDuration,
+  int? gapSymbolDuration,
+  int? gapLetterDuration,
+  int? gapWordDuration,
+  String? symbolReference,
+});
 </code></pre>
 <hr>
 <h2 id="-api-overview">📦 API Overview</h2>
@@ -189,7 +229,7 @@ Let’s make text <strong>feel</strong> awesome! 💥</p>
 <footer>
   <span class="no-break">
     haptic_morse
-      1.0.0
+      1.0.3
   </span>
   
 </footer>

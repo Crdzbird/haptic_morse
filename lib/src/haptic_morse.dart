@@ -27,7 +27,6 @@ final class HapticMorse {
     int? gapLetterDuration,
     int? gapWordDuration,
     String? symbolReference,
-    String? dashReference,
   }) {
     return HapticMorse._(
       charMap: charMap,
@@ -40,7 +39,6 @@ final class HapticMorse {
       gapLetterDuration: gapLetterDuration,
       gapWordDuration: gapWordDuration,
       symbolReference: symbolReference,
-      dashReference: dashReference,
     );
   }
 
@@ -84,7 +82,6 @@ final class HapticMorse {
     int? gapLetterDuration,
     int? gapWordDuration,
     String? symbolReference,
-    String? dashReference,
   })  : _charMap = charMap ?? _defaultCharMap,
         _charReference = charReference ?? _defaultCharReference,
         _numericMap = numericMap ?? _defaultNumericMap,

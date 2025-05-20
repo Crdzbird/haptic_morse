@@ -101,10 +101,9 @@ Words are separated by " / "</p>
     if (!isFirstCharacter) morseText.write(&#39; &#39;);
 
     &#47;&#47; Get the morse code for this character
-    final morse =
-        charIndex.$1 == false
-            ? _charMap[charIndex.$2]
-            : _numericMap[charIndex.$2];
+    final morse = charIndex.$1 == false
+        ? _charMap[charIndex.$2]
+        : _numericMap[charIndex.$2];
 
     morseText.write(morse);
     isFirstCharacter = false;
@@ -139,7 +138,7 @@ Words are separated by " / "</p>
 <footer>
   <span class="no-break">
     haptic_morse
-      1.0.0
+      1.0.3
   </span>
   
 </footer>

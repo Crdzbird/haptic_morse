@@ -1,4 +1,8 @@
 
+## 1.0.3
+
+- String extension class to facilitate accessibility and string manipulation directly.
+
 ## 1.0.2
 
 - Integrated custom symbol reference.

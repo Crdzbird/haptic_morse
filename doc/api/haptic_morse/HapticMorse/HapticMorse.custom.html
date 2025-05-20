@@ -66,6 +66,7 @@
 <li><span class="parameter" id="custom-param-gapSymbolDuration"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.7.2/dart-core/int-class.html">int</a>?</span> <span class="parameter-name">gapSymbolDuration</span>, </span></li>
 <li><span class="parameter" id="custom-param-gapLetterDuration"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.7.2/dart-core/int-class.html">int</a>?</span> <span class="parameter-name">gapLetterDuration</span>, </span></li>
 <li><span class="parameter" id="custom-param-gapWordDuration"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.7.2/dart-core/int-class.html">int</a>?</span> <span class="parameter-name">gapWordDuration</span>, </span></li>
+<li><span class="parameter" id="custom-param-symbolReference"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.7.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">symbolReference</span>, </span></li>
 </ol>})
     </section>
     
@@ -96,6 +97,7 @@
   int? gapSymbolDuration,
   int? gapLetterDuration,
   int? gapWordDuration,
+  String? symbolReference,
 }) {
   return HapticMorse._(
     charMap: charMap,
@@ -107,6 +109,7 @@
     gapSymbolDuration: gapSymbolDuration,
     gapLetterDuration: gapLetterDuration,
     gapWordDuration: gapWordDuration,
+    symbolReference: symbolReference,
   );
 }</code></pre>
 </section>
@@ -136,7 +139,7 @@
 <footer>
   <span class="no-break">
     haptic_morse
-      1.0.0
+      1.0.3
   </span>
   
 </footer>
