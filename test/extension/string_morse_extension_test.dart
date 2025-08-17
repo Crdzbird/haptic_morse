@@ -1,4 +1,4 @@
-import 'package:haptic_morse/src/extension/string_morse_extension.dart';
+import 'package:haptic_morse/haptic_morse.dart';
 import 'package:test/test.dart';
 
 void main() {

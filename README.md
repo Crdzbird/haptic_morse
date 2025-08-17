@@ -130,6 +130,12 @@ final morse3 = 'HELLO WORLD'.toHapticPattern({
 
 ---
 
+## Vibrate Module
+
+Call `HapticVibration` to integrate vibration functionality.
+---
+
+
 ## 📦 API Overview
 
 ### 🧩 `convertTextToMorseString(String?) → String?`

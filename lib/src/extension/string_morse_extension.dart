@@ -1,4 +1,4 @@
-import 'package:haptic_morse/src/haptic_morse.dart';
+import 'package:haptic_morse/haptic_morse.dart';
 
 /// Extension on [String] to convert to Morse code and haptic patterns.
 extension StringMorseExtension on String {

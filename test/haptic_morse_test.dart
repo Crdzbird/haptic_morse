@@ -1,8 +1,8 @@
-import 'package:haptic_morse/src/haptic_morse.dart';
+import 'package:haptic_morse/src/haptic/haptic_morse.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('HapticMorse', () {
+  group(HapticMorse, () {
     final hapticMorse = HapticMorse();
 
     test(
