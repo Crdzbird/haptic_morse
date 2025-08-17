@@ -100,21 +100,21 @@ void main() {
 
     test('convertTextToMorseMap returns correct map', () {
       final result = hapticMorse.convertTextToMorseMap('E');
-      expect(result['hapticDurations'], [100]);
-      expect(result['hapticCount'], 1);
-      expect(result['morseString'], '.');
+      expect(result.hapticDurations, [100]);
+      expect(result.hapticDurations.length, 1);
+      expect(result.morseCode, '.');
     });
 
     test('convertTextToMorseMap returns empty map for null or empty input', () {
       final result1 = hapticMorse.convertTextToMorseMap(null);
-      expect(result1['hapticDurations'], []);
-      expect(result1['hapticCount'], 0);
-      expect(result1['morseString'], '');
+      expect(result1.hapticDurations, []);
+      expect(result1.hapticDurations.length, 0);
+      expect(result1.morseCode, '');
 
       final result2 = hapticMorse.convertTextToMorseMap('');
-      expect(result2['hapticDurations'], []);
-      expect(result2['hapticCount'], 0);
-      expect(result2['morseString'], '');
+      expect(result2.hapticDurations, []);
+      expect(result2.hapticDurations.length, 0);
+      expect(result2.morseCode, '');
     });
 
     test('custom timings and mappings work', () {

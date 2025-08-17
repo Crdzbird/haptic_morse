@@ -1,3 +1,5 @@
+import 'package:haptic_morse/haptic_morse.dart';
+
 /// A class that converts text to Morse code and haptic patterns.
 ///
 /// This class provides functionality to:
@@ -263,22 +265,18 @@ final class HapticMorse {
 
   /// Converts text to both haptic pattern and Morse code string.
   ///
-  /// Returns a map containing:
+  /// Returns a [HapticModel] containing:
   /// - 'hapticDurations': List of durations for haptic feedback
   /// - 'hapticCount': Number of elements in the haptic pattern
   /// - 'morseString': String representation of Morse code
-  Map<String, dynamic> convertTextToMorseMap(String? input) {
-    if (input == null || input.isEmpty) {
-      return {'hapticDurations': <int>[], 'hapticCount': 0, 'morseString': ''};
-    }
-
+  HapticModel convertTextToMorseMap(String? input) {
+    if (input == null || input.isEmpty) return HapticModel();
     final hapticDurations = convertTextToHapticPattern(input);
     final morseString = convertTextToMorseString(input);
-
-    return {
-      'hapticDurations': hapticDurations,
-      'hapticCount': hapticDurations.length,
-      'morseString': morseString ?? '',
-    };
+    return HapticModel(
+      text: input,
+      morseCode: morseString ?? '',
+      hapticDurations: hapticDurations,
+    );
   }
 }

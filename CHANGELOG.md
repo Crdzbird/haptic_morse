@@ -1,3 +1,7 @@
+# 1.0.5
+
+- Integrated HapticModel to facilitate interaction
+
 ## 1.0.4
 
 - Updated dependencies.

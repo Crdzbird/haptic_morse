@@ -55,8 +55,8 @@ extension StringMorseExtension on String {
         symbolReference: symbolReference,
       ).convertTextToMorseString(this);
 
-  /// Returns the full map `{ hapticDurations, hapticCount, morseString }`.
-  Map<String, dynamic> toMorseMap({
+  /// Returns a [HapticModel] representation of the Morse code for this string.
+  HapticModel toMorseMap({
     List<String>? charMap,
     String? charReference,
     List<String>? numericMap,

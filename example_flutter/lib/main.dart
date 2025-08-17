@@ -30,12 +30,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Map<String, dynamic> _message = {};
+  HapticModel _message = HapticModel();
 
   Future<void> _morse() async {
     final morse = HapticMorse();
     _message = morse.convertTextToMorseMap("HOLA");
-    await HapticVibration().vibrate(pattern: _message['hapticDurations']);
+    await HapticVibration().vibrate(pattern: _message.hapticDurations);
     setState(() {});
   }
 
@@ -51,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              _message.toString(),
+              _message.toJson().toString(),
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ],

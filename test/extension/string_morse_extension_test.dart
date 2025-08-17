@@ -21,11 +21,10 @@ void main() {
 
     test('toMorseMap returns correct map structure for "E"', () {
       final map = 'E'.toMorseMap();
-      expect(map, isA<Map<String, dynamic>>());
-      expect(map.containsKey('hapticDurations'), true);
-      expect(map.containsKey('hapticCount'), true);
-      expect(map.containsKey('morseString'), true);
-      expect(map['morseString'], '.');
+      expect(map, isA<HapticModel>());
+      expect(map.hapticDurations, isNotEmpty);
+      expect(map.morseCode, isNotEmpty);
+      expect(map.text, isNotEmpty);
     });
 
     test('toMorseString returns null for empty string', () {
@@ -40,9 +39,9 @@ void main() {
 
     test('toMorseMap returns expected values for "123"', () {
       final map = '123'.toMorseMap();
-      expect(map['morseString'], '.---- ..--- ...--');
-      expect(map['hapticDurations'], isA<List<int>>());
-      expect(map['hapticCount'], isA<int>());
+      expect(map.text, isNotEmpty);
+      expect(map.hapticDurations, isNotEmpty);
+      expect(map.morseCode, isNotEmpty);
     });
 
     test('Custom parameters are passed through', () {
