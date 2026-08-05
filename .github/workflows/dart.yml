@@ -32,7 +32,7 @@ jobs:
 
       # example_flutter is a separate package. Both `dart format .` and
       # `flutter analyze` descend into it from the repository root, and both
-      # behave differently when its analysis_options include cannot resolve —
+      # behave differently when its analysis_options include cannot resolve -
       # the formatter reported a file as unformatted here while the identical
       # command passed locally, purely because the deps were missing.
       - name: Install example app dependencies
@@ -47,7 +47,7 @@ jobs:
 
       # Runs the untagged tests on the plain Dart SDK. This is the guard that
       # keeps package:haptic_morse/haptic_morse.dart free of Flutter and
-      # dart:ui — if anything in the core starts importing them, this step
+      # dart:ui - if anything in the core starts importing them, this step
       # fails to load while `flutter test` below would still pass.
       - name: Verify the core library stays pure Dart
         run: dart test --exclude-tags flutter
@@ -58,7 +58,7 @@ jobs:
       # The bar for this package is 100%, so anything less fails the build
       # rather than quietly drifting. Note that an assert message written with
       # string interpolation is executable code that only runs on failure, and
-      # therefore can never be covered — keep such messages constant.
+      # therefore can never be covered - keep such messages constant.
       - name: Enforce 100% line coverage
         run: |
           awk -F: '

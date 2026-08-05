@@ -92,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 24),
             Text('Morse', style: theme.textTheme.labelLarge),
             SelectableText(
-              _message.morseCode.isEmpty ? '—' : _message.morseCode,
+              _message.morseCode.isEmpty ? '-' : _message.morseCode,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
@@ -102,9 +102,9 @@ class _MyHomePageState extends State<MyHomePage> {
               '${_message.events.length} events · '
               '${_message.totalDuration}ms · '
               '${switch (_canPlayPatterns) {
-                null => 'checking device…',
+                null => 'checking device...',
                 true => 'haptics available',
-                false => 'haptics unavailable — showing code only',
+                false => 'haptics unavailable - showing code only',
               }}',
               style: theme.textTheme.bodySmall,
             ),

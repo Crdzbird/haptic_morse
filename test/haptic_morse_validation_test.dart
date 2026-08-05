@@ -92,7 +92,7 @@ void main() {
       );
     });
 
-    test('neither is fine — the defaults are used', () {
+    test('neither is fine - the defaults are used', () {
       expect(HapticMorse.custom().convertTextToMorseString('A'), '.-');
     });
   });

@@ -1,6 +1,6 @@
 /// Convert text to Morse code and to haptic vibration sequences.
 ///
-/// This library is pure Dart — it does not import Flutter — so it runs in a
+/// This library is pure Dart - it does not import Flutter - so it runs in a
 /// CLI, on a server, and in `dart test`. To drive the device motor, import
 /// `package:haptic_morse/haptic_morse_vibration.dart` as well.
 ///

@@ -146,7 +146,7 @@ void main() {
       };
 
       for (final MapEntry(key: input, value: description) in cases.entries) {
-        test('"$input" — $description', () {
+        test('"$input" - $description', () {
           expectWellFormed(
             morse.convertTextToHapticEvents(input),
             reason: description,

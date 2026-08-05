@@ -63,7 +63,7 @@ void main() {
   group('the PARIS standard word measures 50 units', () {
     // "PARIS" plus its trailing word space is the reference word used to
     // define Morse speed. If this holds, every element and gap ratio is
-    // simultaneously correct — it is the strongest single check available.
+    // simultaneously correct - it is the strongest single check available.
     final single = morse.convertTextToModel('PARIS').totalDuration;
     final double = morse.convertTextToModel('PARIS PARIS').totalDuration;
     final wordSpace = double - 2 * single;
@@ -228,7 +228,7 @@ void main() {
       final codes = codesOf(accented);
 
       // À and Å deliberately share a code, so exactly one duplicate is
-      // expected — any more means a genuine clash was introduced.
+      // expected - any more means a genuine clash was introduced.
       expect(codes.length - codes.toSet().length, 1);
     });
 

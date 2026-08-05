@@ -9,7 +9,7 @@ linter:
     #
     # lib/src/** uses relative imports between siblings. Beyond matching the
     # Dart SDK's own convention, it makes the one import that must never
-    # appear in src/ — the public barrel — look obviously wrong
+    # appear in src/ - the public barrel - look obviously wrong
     # (`../../haptic_morse.dart`) rather than looking like every other import.
     # Version 1.x shipped exactly that bug: src/haptic/haptic_morse.dart
     # imported the barrel, which dragged package:vibration and dart:ui into

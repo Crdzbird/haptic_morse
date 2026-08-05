@@ -28,7 +28,7 @@ final class HapticVibration {
   /// Whether the device has a vibration motor at all.
   ///
   /// Check this before offering haptic output as a user-facing feature, and
-  /// provide a visual or audible alternative when it is `false` — a haptic-only
+  /// provide a visual or audible alternative when it is `false` - a haptic-only
   /// message is unreadable on a device that cannot vibrate.
   ///
   /// **Returns `false` on emulators, simulators, and any non-mobile host.**

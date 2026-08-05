@@ -40,7 +40,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Nothing encoded until Play is tapped.
-    expect(find.text('—'), findsOneWidget);
+    expect(find.text('-'), findsOneWidget);
 
     await tester.tap(find.text('Play'));
     await tester.pumpAndSettle();
@@ -65,7 +65,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(vibrateCalls(), isEmpty);
-    expect(find.text('—'), findsOneWidget);
+    expect(find.text('-'), findsOneWidget);
   });
 
   testWidgets('a device without waveform support shows the code instead', (

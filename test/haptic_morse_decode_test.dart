@@ -103,7 +103,7 @@ void main() {
       }
     });
 
-    test('needs no threshold guessing — the events are already typed', () {
+    test('needs no threshold guessing - the events are already typed', () {
       // Durations are deliberately absurd; the event *types* carry the
       // structure, so decoding is exact regardless.
       const events = <HapticEvent>[

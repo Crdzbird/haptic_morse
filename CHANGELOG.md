@@ -7,7 +7,7 @@ every renamed member.
 ### Fixed
 
 - **Haptic patterns are no longer phase-inverted.** `package:vibration` treats
-  index 0 of `pattern` as an *off* delay and alternates off/on from there — the
+  index 0 of `pattern` as an *off* delay and alternates off/on from there - the
   convention shared by Android's `VibrationEffect.createWaveform` and the iOS
   implementation. 1.x emitted a vibration at index 0, so every dot and dash was
   played as silence and every gap as a buzz. `toVibrationPattern()` now emits
@@ -21,8 +21,9 @@ every renamed member.
   recur.
 - **Characters outside the Basic Multilingual Plane work.** Text is segmented
   into grapheme clusters, so emoji built from surrogate pairs, variation
-  selectors, or zero-width joiners count as one character. Previously `💧` was
-  split into two surrogate halves and resolved as two separate letters.
+  selectors, or zero-width joiners count as one character. Previously a single
+  non-BMP character was split into two surrogate halves and resolved as two
+  separate letters.
 - **The core no longer depends on Flutter.** `package:haptic_morse/haptic_morse.dart`
   is pure Dart and runs under `dart run` and `dart test`; 1.x pulled in
   `dart:ui` through the barrel, so even the shipped example could not run.
@@ -40,7 +41,7 @@ every renamed member.
 - `dashReference`, alongside `symbolReference`, so custom patterns are
   unambiguous and can be validated.
 - `String.toVibrationPattern()`.
-- Argument validation on `HapticMorse.custom` — see *Changed*.
+- Argument validation on `HapticMorse.custom` - see *Changed*.
 - `HapticVibration.hasVibrator`, `.hasCustomVibrationsSupport`, and
   `.hasAmplitudeControl`, so an app can fall back to showing the Morse code on
   a device that cannot reproduce the timing. Nothing in 1.x exposed a
@@ -54,7 +55,7 @@ every renamed member.
 - **`additionalSymbols`** on `HapticMorse.custom` and `HapticMorse.atSpeed`,
   merging extra character-to-pattern entries on top of the resolved table.
 - **Decoding: `decodeMorseString` and `decodeEvents`.** `decodeEvents` needs no
-  threshold guessing, since the events are already typed — symbol and word
+  threshold guessing, since the events are already typed - symbol and word
   boundaries are exact.
 - **`HapticMorse.atSpeed`**, expressing timing in words per minute
   (`unit = 1200 / wpm`), with **Farnsworth timing** via
@@ -80,9 +81,9 @@ every renamed member.
   `package:haptic_morse/haptic_morse_vibration.dart`. `package:vibration` is no
   longer re-exported, so its releases are no longer implicitly breaking changes
   for this package.
-- **Renames:** `convertTextToHapticPattern` → `convertTextToHapticEvents`,
-  `convertTextToMorseMap` → `convertTextToModel`, `String.toMorseMap` →
-  `toMorseModel`, `String.toHapticPattern` → `toHapticEvents`.
+- **Renames:** `convertTextToHapticPattern` -> `convertTextToHapticEvents`,
+  `convertTextToMorseMap` -> `convertTextToModel`, `String.toMorseMap` ->
+  `toMorseModel`, `String.toHapticPattern` -> `toHapticEvents`.
 - `HapticModel.hapticDurations` is replaced by `events`, with
   `toVibrationPattern()` and `totalDuration` alongside it. The JSON shape
   changed accordingly: `hapticDurations: [100, 300]` becomes
@@ -99,7 +100,7 @@ every renamed member.
 - **The string extensions take an optional `HapticMorse`** instead of repeating
   eleven parameters on each method:
   `'SOS'.toMorseString(HapticMorse.custom(dotDuration: 80))`.
-- `convertTextToMorseString` returns `null` — not `''` — when the input holds
+- `convertTextToMorseString` returns `null` - not `''` - when the input holds
   no mappable characters, making its contract consistent.
 - Character lookup uses a map built once at construction rather than scanning
   reference strings per character.
@@ -120,6 +121,19 @@ every renamed member.
   against 3.2.0's Android and (newly Swift-Package-Manager-based) iOS sources
   before the bump; index 0 is still an off delay.
 - Added `meta` as a dependency; the value types are now `@immutable`.
+- The example is self-verifying. It reconstructs the message from the raw
+  vibration pattern using only the platform off/on convention and none of this
+  package's types, so it is independent evidence rather than a restatement of
+  the encoder. It also demonstrates the 1.x inversion instead of describing it:
+  the same durations without the leading zero decode to "UEED" rather than
+  "SOS". Eight assertions in total; the program exits non-zero if any fails,
+  and CI runs it on every push.
+- `test/readme_test.dart` checks that the example output quoted in README.md is
+  still what the example prints, in the same order, so the documentation cannot
+  drift from the code.
+- Documentation and example output use plain ASCII: no emoji, no em dashes, no
+  arrow or check-mark glyphs. Emoji remain only in tests, where they are the
+  data under test for non-BMP grapheme handling.
 - Line coverage is 100% and CI fails below it. The two lines previously
   uncovered were an assert's interpolated failure message, which is executable
   code that only runs when the assert fails and so can never be covered;
@@ -128,7 +142,7 @@ every renamed member.
 
 # 1.0.6
 
-Correctness and tooling release. **Haptic pattern output is unchanged** — the
+Correctness and tooling release. **Haptic pattern output is unchanged** - the
 pattern rework is deliberately deferred to 2.0.0 (see *Known issues*).
 
 ### Fixed

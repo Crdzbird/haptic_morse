@@ -6,7 +6,7 @@ import '../model/haptic_model.dart';
 
 /// Converts text to Morse code and to haptic sequences, and back again.
 ///
-/// Use the const default for standard International Morse Code — letters,
+/// Use the const default for standard International Morse Code - letters,
 /// digits, and ITU punctuation:
 ///
 /// ```dart
@@ -19,8 +19,8 @@ import '../model/haptic_model.dart';
 /// throw [ArgumentError] on an inconsistent configuration.
 ///
 /// Text is segmented into user-perceived characters (grapheme clusters), so
-/// characters outside the Basic Multilingual Plane — including emoji with
-/// variation selectors or zero-width joiners — work in a custom alphabet.
+/// characters outside the Basic Multilingual Plane - including emoji with
+/// variation selectors or zero-width joiners - work in a custom alphabet.
 @immutable
 final class HapticMorse {
   /// Creates an encoder for standard International Morse Code with standard
@@ -54,7 +54,7 @@ final class HapticMorse {
   /// Pass [effectiveWordsPerMinute] for **Farnsworth timing**: symbols are
   /// sent at [wordsPerMinute] while the gaps between letters and words are
   /// stretched so the message overall reads at the slower speed. This is the
-  /// standard way to make Morse learnable — and, for haptics, readable —
+  /// standard way to make Morse learnable - and, for haptics, readable -
   /// without distorting the shape of each character.
   ///
   /// ```dart
@@ -282,7 +282,7 @@ final class HapticMorse {
   /// Letters are separated by a space and words by `" / "`. Characters with no
   /// mapping are skipped.
   ///
-  /// Returns `null` when there is nothing to encode — that is, when [input] is
+  /// Returns `null` when there is nothing to encode - that is, when [input] is
   /// null, empty, whitespace only, or made entirely of unmapped characters.
   String? convertTextToMorseString(String? input) {
     final words = _tokenize(input);
@@ -404,8 +404,8 @@ final class HapticMorse {
   /// Built per call rather than cached, so the class stays const-constructible.
   /// Decoding is not a hot path; the map has a few dozen entries.
   ///
-  /// Where two characters share a pattern — `À` and `Å` in [accentedLetters],
-  /// for instance — the first wins and decoding is therefore lossy for that
+  /// Where two characters share a pattern - `À` and `Å` in [accentedLetters],
+  /// for instance - the first wins and decoding is therefore lossy for that
   /// pair. Encoding is unaffected.
   Map<String, String> _inverseSymbols() {
     final inverse = <String, String>{};
@@ -468,7 +468,7 @@ final class HapticMorse {
           //
           // The message is deliberately a constant with no interpolation. An
           // interpolated message is itself executable code that only runs when
-          // the assert fails, so it can never be covered — keeping it constant
+          // the assert fails, so it can never be covered - keeping it constant
           // is what lets this file reach 100% without excluding anything or
           // dropping the check.
           assert(
@@ -524,7 +524,7 @@ final class HapticMorse {
   /// Rewrites built-in `.`/`-` patterns using custom symbols.
   ///
   /// Without this, choosing custom symbols would make whichever default table
-  /// the caller did *not* override fail validation — asking for
+  /// the caller did *not* override fail validation - asking for
   /// `symbolReference: '0'` would reject the standard digits it kept.
   static Map<String, String> _respellTable(
     Map<String, String> table,
@@ -700,11 +700,11 @@ final class HapticMorse {
     '=': '-...-', // double hyphen (prosign BT)
     '+': '.-.-.', // cross (prosign AR)
     '@': '.--.-.', // commercial at (prosign AC)
-    '&': '.-...', // ampersand (prosign AS) — conventional
-    '!': '-.-.--', // exclamation mark — conventional
-    ';': '-.-.-.', // semicolon — conventional
-    '_': '..--.-', // underscore — conventional
-    r'$': '...-..-', // dollar — conventional
+    '&': '.-...', // ampersand (prosign AS) - conventional
+    '!': '-.-.--', // exclamation mark - conventional
+    ';': '-.-.-.', // semicolon - conventional
+    '_': '..--.-', // underscore - conventional
+    r'$': '...-..-', // dollar - conventional
   };
 
   // Digits, ITU-R M.1677-1.

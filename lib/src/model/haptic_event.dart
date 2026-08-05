@@ -34,7 +34,7 @@ sealed class HapticEvent {
   /// pulse never reaches a perceptible amplitude; linear resonant actuators
   /// and Taptic-style hardware respond faster. The real floor is device
   /// specific, which is why nothing in this package rejects a shorter
-  /// duration — a sequence may legitimately be rendered, analysed, or sent
+  /// duration - a sequence may legitimately be rendered, analysed, or sent
   /// somewhere other than a motor.
   ///
   /// Use it as an advisory check on timings you did not choose yourself:
@@ -110,7 +110,7 @@ sealed class HapticEvent {
   String toString() => 'HapticEvent($type, ${duration}ms)';
 }
 
-/// A short vibration — the `.` of Morse code.
+/// A short vibration - the `.` of Morse code.
 final class HapticDot extends HapticEvent {
   /// Creates a dot lasting [duration] milliseconds.
   const HapticDot(super.duration);
@@ -122,7 +122,7 @@ final class HapticDot extends HapticEvent {
   String get type => 'dot';
 }
 
-/// A long vibration — the `-` of Morse code.
+/// A long vibration - the `-` of Morse code.
 final class HapticDash extends HapticEvent {
   /// Creates a dash lasting [duration] milliseconds.
   const HapticDash(super.duration);
@@ -230,6 +230,6 @@ extension HapticEventPattern on List<HapticEvent> {
 
   /// Whether every vibration in this sequence is long enough to be felt.
   ///
-  /// A heuristic — see [HapticEvent.minimumPerceptibleMilliseconds].
+  /// A heuristic - see [HapticEvent.minimumPerceptibleMilliseconds].
   bool get isLikelyPerceptible => imperceptibleEvents.isEmpty;
 }
