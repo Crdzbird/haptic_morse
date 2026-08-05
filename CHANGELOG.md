@@ -32,6 +32,13 @@ pattern rework is deliberately deferred to 2.0.0 (see *Known issues*).
   `convertTextToMorseMap` was documented as returning a `Map` with a
   `hapticCount` key that has never existed, and the emoji-mapping section
   described behaviour the package does not have.
+- Generated `doc/api` output is no longer tracked or published. It shipped in
+  the tarball and documented a private member removed by this release; pub.dev
+  builds its own API docs.
+- `example_flutter/` is excluded from the published archive via `.pubignore`.
+  pub.dev only renders `example/`, so the demo app shipped to every consumer
+  without ever being displayed. It remains in the repository.
+- The published archive is now 14 KB, down from roughly 800 KB in 1.0.5.
 - `coverage/` is now git-ignored.
 
 ### Known issues (fixed in 2.0.0)

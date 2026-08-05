@@ -1,0 +1,37 @@
+# Excluded from the published package.
+#
+# NOTE: when this file exists, pub uses it INSTEAD OF .gitignore at this level,
+# so it must repeat every pattern from .gitignore. Keep the two in sync.
+
+# --- Not shipped to pub.dev, but kept in the repository ---
+#
+# pub only renders `example/` on pub.dev, so the full demo application would
+# ship to every consumer without ever being displayed.
+example_flutter/
+
+# --- Mirrors .gitignore ---
+
+# Dart/Pub related
+.dart_tool/
+.packages
+.pub-cache/
+build/
+coverage/
+doc/api/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+pubspec.lock
+
+# Flutter related
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-versions
+.melos_tool/
