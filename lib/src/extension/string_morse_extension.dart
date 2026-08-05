@@ -1,83 +1,43 @@
-import 'package:haptic_morse/haptic_morse.dart';
+import '../haptic/haptic_morse.dart';
+import '../model/haptic_event.dart';
+import '../model/haptic_model.dart';
 
-/// Extension on [String] to convert to Morse code and haptic patterns.
+/// Morse conversions directly on [String].
+///
+/// Each method takes an optional [HapticMorse]; omit it for standard
+/// International Morse Code, or pass a configured instance to override the
+/// timings or the alphabet:
+///
+/// ```dart
+/// 'SOS'.toMorseString(); // "... --- ..."
+/// 'SOS'.toMorseString(HapticMorse.custom(dotDuration: 80));
+/// ```
 extension StringMorseExtension on String {
-  /// Returns the haptic-duration pattern for this string,
-  /// using either the default or any custom params you pass.
-  List<int> toHapticPattern({
-    List<String>? charMap,
-    String? charReference,
-    List<String>? numericMap,
-    String? numericReference,
-    int? dotDuration,
-    int? dashDuration,
-    int? gapSymbolDuration,
-    int? gapLetterDuration,
-    int? gapWordDuration,
-    String? symbolReference,
-  }) =>
-      HapticMorse.custom(
-        charMap: charMap,
-        charReference: charReference,
-        numericMap: numericMap,
-        numericReference: numericReference,
-        dotDuration: dotDuration,
-        dashDuration: dashDuration,
-        gapSymbolDuration: gapSymbolDuration,
-        gapLetterDuration: gapLetterDuration,
-        gapWordDuration: gapWordDuration,
-        symbolReference: symbolReference,
-      ).convertTextToHapticPattern(this);
+  /// The Morse code for this string, or `null` if nothing could be encoded.
+  ///
+  /// See [HapticMorse.convertTextToMorseString].
+  String? toMorseString([HapticMorse morse = const HapticMorse()]) =>
+      morse.convertTextToMorseString(this);
 
-  /// Returns the “.- -...” style Morse string for this string.
-  String? toMorseString({
-    List<String>? charMap,
-    String? charReference,
-    List<String>? numericMap,
-    String? numericReference,
-    int? dotDuration,
-    int? dashDuration,
-    int? gapSymbolDuration,
-    int? gapLetterDuration,
-    int? gapWordDuration,
-    String? symbolReference,
-  }) =>
-      HapticMorse.custom(
-        charMap: charMap,
-        charReference: charReference,
-        numericMap: numericMap,
-        numericReference: numericReference,
-        dotDuration: dotDuration,
-        dashDuration: dashDuration,
-        gapSymbolDuration: gapSymbolDuration,
-        gapLetterDuration: gapLetterDuration,
-        gapWordDuration: gapWordDuration,
-        symbolReference: symbolReference,
-      ).convertTextToMorseString(this);
+  /// The haptic sequence for this string.
+  ///
+  /// See [HapticMorse.convertTextToHapticEvents].
+  List<HapticEvent> toHapticEvents([
+    HapticMorse morse = const HapticMorse(),
+  ]) =>
+      morse.convertTextToHapticEvents(this);
 
-  /// Returns a [HapticModel] representation of the Morse code for this string.
-  HapticModel toMorseMap({
-    List<String>? charMap,
-    String? charReference,
-    List<String>? numericMap,
-    String? numericReference,
-    int? dotDuration,
-    int? dashDuration,
-    int? gapSymbolDuration,
-    int? gapLetterDuration,
-    int? gapWordDuration,
-    String? symbolReference,
-  }) =>
-      HapticMorse.custom(
-        charMap: charMap,
-        charReference: charReference,
-        numericMap: numericMap,
-        numericReference: numericReference,
-        dotDuration: dotDuration,
-        dashDuration: dashDuration,
-        gapSymbolDuration: gapSymbolDuration,
-        gapLetterDuration: gapLetterDuration,
-        gapWordDuration: gapWordDuration,
-        symbolReference: symbolReference,
-      ).convertTextToMorseMap(this);
+  /// A [HapticModel] describing this string.
+  ///
+  /// See [HapticMorse.convertTextToModel].
+  HapticModel toMorseModel([HapticMorse morse = const HapticMorse()]) =>
+      morse.convertTextToModel(this);
+
+  /// The vibration pattern for this string, ready for `Vibration.vibrate`.
+  ///
+  /// Shorthand for `toHapticEvents(morse).toVibrationPattern()`.
+  List<int> toVibrationPattern([
+    HapticMorse morse = const HapticMorse(),
+  ]) =>
+      morse.convertTextToHapticEvents(this).toVibrationPattern();
 }

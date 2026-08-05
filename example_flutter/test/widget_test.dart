@@ -1,30 +1,52 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:example_flutter/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  const channel = MethodChannel('vibration');
+  final log = <MethodCall>[];
+
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+          log.add(methodCall);
+          return null;
+        });
+  });
+
+  tearDown(log.clear);
+
+  testWidgets('encodes the message and plays it', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Nothing encoded until Play is tapped.
+    expect(find.text('—'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.tap(find.text('Play'));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // HOLA
+    expect(find.text('.... --- .-.. .-'), findsOneWidget);
+
+    final call = log.singleWhere((c) => c.method == 'vibrate');
+    final pattern = List<int>.from(
+      (call.arguments as Map)['pattern'] as List<dynamic>,
+    );
+
+    // Index 0 must be the off delay the platform expects.
+    expect(pattern.first, 0);
+  });
+
+  testWidgets('an unencodable message never touches the motor', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.enterText(find.byType(TextField), '!!!');
+    await tester.tap(find.text('Play'));
+    await tester.pumpAndSettle();
+
+    expect(log, isEmpty);
+    expect(find.text('—'), findsOneWidget);
   });
 }

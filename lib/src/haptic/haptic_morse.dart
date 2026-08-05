@@ -1,23 +1,57 @@
-import 'package:haptic_morse/haptic_morse.dart';
+import 'package:characters/characters.dart';
 
-/// A class that converts text to Morse code and haptic patterns.
+import '../model/haptic_event.dart';
+import '../model/haptic_model.dart';
+
+/// Converts text to Morse code and to haptic sequences.
 ///
-/// This class provides functionality to:
-/// - Convert text to Morse code string representation (dots and dashes)
-/// - Generate haptic duration sequences for vibration feedback
-/// - Support custom character sets and Morse code mappings
+/// Use the const default for standard International Morse Code:
+///
+/// ```dart
+/// const morse = HapticMorse();
+/// morse.convertTextToMorseString('SOS'); // "... --- ..."
+/// ```
+///
+/// Use [HapticMorse.custom] to change timings or supply your own alphabet.
+/// Unlike the default constructor it validates its arguments and throws
+/// [ArgumentError] on an inconsistent configuration.
+///
+/// Text is segmented into user-perceived characters (grapheme clusters), so
+/// characters outside the Basic Multilingual Plane — including emoji with
+/// variation selectors or zero-width joiners — work in a custom alphabet.
 final class HapticMorse {
-  /// Creates a HapticMorse instance with custom mappings and timing parameters.
+  /// Creates an encoder for standard International Morse Code (A-Z, 0-9)
+  /// with standard timing ratios of 1/3/1/3/7 units.
   ///
-  /// [charMap] - List of Morse code patterns for characters (e.g., [".-", "-...", etc.])
-  /// [charReference] - String containing characters corresponding to charMap indices, remember to keep it in the same order as charMap
-  /// [numericMap] - List of Morse code patterns for numeric digits
-  /// [numericReference] - String containing digits corresponding to numericMap indices
-  /// [dotDuration] - Duration in milliseconds for a dot vibration
-  /// [dashDuration] - Duration in milliseconds for a dash vibration
-  /// [gapSymbolDuration] - Duration in milliseconds between symbols in the same character
-  /// [gapLetterDuration] - Duration in milliseconds between letters
-  /// [gapWordDuration] - Duration in milliseconds between words
+  /// This configuration is always valid, so it is a `const` constructor and
+  /// performs no validation.
+  const HapticMorse()
+      : _symbols = _defaultSymbols,
+        _dotDuration = 100,
+        _dashDuration = 300,
+        _gapSymbolDuration = 100,
+        _gapLetterDuration = 300,
+        _gapWordDuration = 700,
+        _dotSymbol = '.',
+        _dashSymbol = '-';
+
+  /// Creates an encoder with custom mappings and/or timings.
+  ///
+  /// Any omitted argument falls back to its standard value, so
+  /// `HapticMorse.custom(dotDuration: 80)` keeps the standard alphabet.
+  ///
+  /// - [charMap] / [charReference]: Morse patterns and the characters they
+  ///   encode, in matching order.
+  /// - [numericMap] / [numericReference]: the same for digits. Entries here
+  ///   take precedence over [charReference] on overlap.
+  /// - [symbolReference] / [dashReference]: the single characters used to
+  ///   spell the patterns in the maps. Default `.` and `-`.
+  /// - Durations are in milliseconds and must be positive.
+  ///
+  /// Throws [ArgumentError] if a map and its reference differ in length, a
+  /// reference repeats a character, a pattern is empty or contains anything
+  /// other than [symbolReference] and [dashReference], or a duration is not
+  /// positive.
   factory HapticMorse.custom({
     List<String>? charMap,
     String? charReference,
@@ -29,258 +63,356 @@ final class HapticMorse {
     int? gapLetterDuration,
     int? gapWordDuration,
     String? symbolReference,
+    String? dashReference,
   }) {
+    final dot = symbolReference ?? '.';
+    final dash = dashReference ?? '-';
+
+    _requireSingleGrapheme(dot, 'symbolReference');
+    _requireSingleGrapheme(dash, 'dashReference');
+    if (dot == dash) {
+      throw ArgumentError.value(
+        dash,
+        'dashReference',
+        'must differ from symbolReference ("$dot")',
+      );
+    }
+
+    final resolvedDot = dotDuration ?? 100;
+    final resolvedDash = dashDuration ?? 300;
+    final resolvedSymbolGap = gapSymbolDuration ?? 100;
+    final resolvedLetterGap = gapLetterDuration ?? 300;
+    final resolvedWordGap = gapWordDuration ?? 700;
+
+    _requirePositive(resolvedDot, 'dotDuration');
+    _requirePositive(resolvedDash, 'dashDuration');
+    _requirePositive(resolvedSymbolGap, 'gapSymbolDuration');
+    _requirePositive(resolvedLetterGap, 'gapLetterDuration');
+    _requirePositive(resolvedWordGap, 'gapWordDuration');
+
+    // Characters first, then digits, so digits win where the two overlap.
+    // This preserves the precedence the numeric lookup had in 1.x.
+    final symbols = <String, String>{}
+      ..addAll(
+        _buildSymbols(
+          patterns: charMap ?? _respell(_defaultCharMap, dot, dash),
+          reference: charReference ?? _defaultCharReference,
+          mapName: 'charMap',
+          referenceName: 'charReference',
+          dot: dot,
+          dash: dash,
+        ),
+      )
+      ..addAll(
+        _buildSymbols(
+          patterns: numericMap ?? _respell(_defaultNumericMap, dot, dash),
+          reference: numericReference ?? _defaultNumericReference,
+          mapName: 'numericMap',
+          referenceName: 'numericReference',
+          dot: dot,
+          dash: dash,
+        ),
+      );
+
     return HapticMorse._(
-      charMap: charMap,
-      charReference: charReference,
-      numericMap: numericMap,
-      numericReference: numericReference,
-      dotDuration: dotDuration,
-      dashDuration: dashDuration,
-      gapSymbolDuration: gapSymbolDuration,
-      gapLetterDuration: gapLetterDuration,
-      gapWordDuration: gapWordDuration,
-      symbolReference: symbolReference,
+      symbols: Map<String, String>.unmodifiable(symbols),
+      dotDuration: resolvedDot,
+      dashDuration: resolvedDash,
+      gapSymbolDuration: resolvedSymbolGap,
+      gapLetterDuration: resolvedLetterGap,
+      gapWordDuration: resolvedWordGap,
+      dotSymbol: dot,
+      dashSymbol: dash,
     );
   }
 
-  /// Creates a HapticMorse instance with default or custom settings.
-  ///
-  /// By default, uses standard International Morse Code for Latin alphabet (A-Z)
-  /// and numerals (0-9) with standard timing ratios.
-  const HapticMorse({
-    List<String>? charMap,
-    String? charReference,
-    List<String>? numericMap,
-    String? numericReference,
-    int? dotDuration,
-    int? dashDuration,
-    int? gapSymbolDuration,
-    int? gapLetterDuration,
-    int? gapWordDuration,
-    String? symbolReference,
-  }) : this._(
-          charMap: charMap,
-          charReference: charReference,
-          numericMap: numericMap,
-          numericReference: numericReference,
-          dotDuration: dotDuration,
-          dashDuration: dashDuration,
-          gapSymbolDuration: gapSymbolDuration,
-          gapLetterDuration: gapLetterDuration,
-          gapWordDuration: gapWordDuration,
-          symbolReference: symbolReference,
-        );
-
-  /// Private constructor with defaulted values
   const HapticMorse._({
-    List<String>? charMap,
-    String? charReference,
-    List<String>? numericMap,
-    String? numericReference,
-    int? dotDuration,
-    int? dashDuration,
-    int? gapSymbolDuration,
-    int? gapLetterDuration,
-    int? gapWordDuration,
-    String? symbolReference,
-  })  : _charMap = charMap ?? _defaultCharMap,
-        _charReference = charReference ?? _defaultCharReference,
-        _numericMap = numericMap ?? _defaultNumericMap,
-        _numericReference = numericReference ?? _defaultNumericReference,
-        _dotDuration = dotDuration ?? 100,
-        _dashDuration = dashDuration ?? 300,
-        _gapSymbolDuration = gapSymbolDuration ?? 100,
-        _gapLetterDuration = gapLetterDuration ?? 300,
-        _gapWordDuration = gapWordDuration ?? 700,
-        _symbolReference = symbolReference ?? '.';
+    required Map<String, String> symbols,
+    required int dotDuration,
+    required int dashDuration,
+    required int gapSymbolDuration,
+    required int gapLetterDuration,
+    required int gapWordDuration,
+    required String dotSymbol,
+    required String dashSymbol,
+  })  : _symbols = symbols,
+        _dotDuration = dotDuration,
+        _dashDuration = dashDuration,
+        _gapSymbolDuration = gapSymbolDuration,
+        _gapLetterDuration = gapLetterDuration,
+        _gapWordDuration = gapWordDuration,
+        _dotSymbol = dotSymbol,
+        _dashSymbol = dashSymbol;
+
+  /// Upper-cased grapheme to Morse pattern. Built once, queried per character.
+  final Map<String, String> _symbols;
+
+  final int _dotDuration;
+  final int _dashDuration;
+  final int _gapSymbolDuration;
+  final int _gapLetterDuration;
+  final int _gapWordDuration;
+  final String _dotSymbol;
+  final String _dashSymbol;
+
+  /// Converts text to its Morse code representation.
+  ///
+  /// Letters are separated by a space and words by `" / "`. Characters with no
+  /// mapping are skipped.
+  ///
+  /// Returns `null` when there is nothing to encode — that is, when [input] is
+  /// null, empty, whitespace only, or made entirely of unmapped characters.
+  String? convertTextToMorseString(String? input) {
+    final words = _tokenize(input);
+    if (words.isEmpty) return null;
+    return _buildMorseString(words);
+  }
+
+  /// Converts text to the haptic sequence that plays it.
+  ///
+  /// The result strictly alternates vibration and gap events, starts and ends
+  /// with a vibration, and never contains two adjacent gaps. Pass it to
+  /// [HapticEventPattern.toVibrationPattern] to drive `package:vibration`.
+  ///
+  /// Returns an empty list when there is nothing to encode.
+  List<HapticEvent> convertTextToHapticEvents(String? input) {
+    final words = _tokenize(input);
+    if (words.isEmpty) return const [];
+    return _buildEvents(words);
+  }
+
+  /// Converts text to a [HapticModel] carrying the text, its Morse code, and
+  /// its haptic sequence.
+  ///
+  /// Returns a default-constructed [HapticModel] when there is nothing to
+  /// encode. This tokenizes once rather than repeating the work for each of
+  /// the two representations.
+  HapticModel convertTextToModel(String? input) {
+    final words = _tokenize(input);
+    if (words.isEmpty) return const HapticModel();
+    return HapticModel(
+      text: input ?? '',
+      morseCode: _buildMorseString(words),
+      events: _buildEvents(words),
+    );
+  }
+
+  /// Splits [input] into words, each word a list of Morse patterns.
+  ///
+  /// Whitespace runs separate words, and words that contain no mapped
+  /// character are dropped entirely. That is what keeps the event sequence
+  /// well formed: no leading, trailing, doubled, or orphaned gaps can survive
+  /// into the output, because a gap is only ever emitted *between* two
+  /// elements that both exist.
+  List<List<String>> _tokenize(String? input) {
+    if (input == null || input.isEmpty) return const [];
+
+    final words = <List<String>>[];
+    var current = <String>[];
+
+    for (final grapheme in input.characters) {
+      if (grapheme.trim().isEmpty) {
+        if (current.isNotEmpty) {
+          words.add(current);
+          current = <String>[];
+        }
+        continue;
+      }
+      final pattern = _symbols[grapheme.toUpperCase()];
+      if (pattern != null) current.add(pattern);
+    }
+
+    if (current.isNotEmpty) words.add(current);
+    return words;
+  }
+
+  String _buildMorseString(List<List<String>> words) =>
+      words.map((letters) => letters.join(' ')).join(' / ');
+
+  List<HapticEvent> _buildEvents(List<List<String>> words) {
+    final events = <HapticEvent>[];
+
+    for (var w = 0; w < words.length; w++) {
+      if (w > 0) events.add(HapticWordGap(_gapWordDuration));
+
+      final letters = words[w];
+      for (var l = 0; l < letters.length; l++) {
+        if (l > 0) events.add(HapticLetterGap(_gapLetterDuration));
+
+        final symbols = letters[l].characters.toList(growable: false);
+        for (var s = 0; s < symbols.length; s++) {
+          if (s > 0) events.add(HapticSymbolGap(_gapSymbolDuration));
+
+          final symbol = symbols[s];
+          // INVARIANT: HapticMorse.custom rejects any pattern containing a
+          // character other than these two, and the built-in table only uses
+          // '.' and '-'. Anything else here means the invariant was bypassed.
+          assert(
+            symbol == _dotSymbol || symbol == _dashSymbol,
+            'pattern contains "$symbol"; expected "$_dotSymbol" or '
+            '"$_dashSymbol"',
+          );
+          events.add(
+            symbol == _dotSymbol
+                ? HapticDot(_dotDuration)
+                : HapticDash(_dashDuration),
+          );
+        }
+      }
+    }
+
+    return List<HapticEvent>.unmodifiable(events);
+  }
+
+  /// Rewrites the built-in `.`/`-` patterns using custom symbols.
+  ///
+  /// Without this, choosing custom symbols would make whichever default map
+  /// the caller did *not* override fail validation — asking for
+  /// `symbolReference: '0'` would reject the standard digits it kept.
+  static List<String> _respell(
+    List<String> patterns,
+    String dot,
+    String dash,
+  ) {
+    if (dot == '.' && dash == '-') return patterns;
+    return patterns
+        .map(
+          (pattern) => pattern.characters
+              .map((symbol) => symbol == '.' ? dot : dash)
+              .join(),
+        )
+        .toList(growable: false);
+  }
+
+  /// Validates one map/reference pair and returns its lookup entries.
+  static Map<String, String> _buildSymbols({
+    required List<String> patterns,
+    required String reference,
+    required String mapName,
+    required String referenceName,
+    required String dot,
+    required String dash,
+  }) {
+    final keys = reference.characters.toList(growable: false);
+
+    if (keys.length != patterns.length) {
+      throw ArgumentError(
+        '$mapName has ${patterns.length} entries but $referenceName has '
+        '${keys.length} characters; they must match one to one.',
+      );
+    }
+
+    final symbols = <String, String>{};
+    for (var i = 0; i < keys.length; i++) {
+      final key = keys[i].toUpperCase();
+      if (symbols.containsKey(key)) {
+        throw ArgumentError.value(
+          keys[i],
+          referenceName,
+          'appears more than once (comparison is case-insensitive)',
+        );
+      }
+
+      final pattern = patterns[i];
+      if (pattern.isEmpty) {
+        throw ArgumentError.value(
+          pattern,
+          '$mapName[$i]',
+          'must not be empty',
+        );
+      }
+      for (final symbol in pattern.characters) {
+        if (symbol != dot && symbol != dash) {
+          throw ArgumentError.value(
+            pattern,
+            '$mapName[$i]',
+            'contains "$symbol", which is neither symbolReference ("$dot") '
+                'nor dashReference ("$dash")',
+          );
+        }
+      }
+
+      symbols[key] = pattern;
+    }
+
+    return symbols;
+  }
+
+  static void _requireSingleGrapheme(String value, String name) {
+    if (value.characters.length != 1) {
+      throw ArgumentError.value(
+        value,
+        name,
+        'must be exactly one character',
+      );
+    }
+  }
+
+  static void _requirePositive(int value, String name) {
+    if (value <= 0) {
+      throw ArgumentError.value(value, name, 'must be greater than zero');
+    }
+  }
+
+  // Standard International Morse Code, used by the const default constructor.
+  static const Map<String, String> _defaultSymbols = {
+    'A': '.-',
+    'B': '-...',
+    'C': '-.-.',
+    'D': '-..',
+    'E': '.',
+    'F': '..-.',
+    'G': '--.',
+    'H': '....',
+    'I': '..',
+    'J': '.---',
+    'K': '-.-',
+    'L': '.-..',
+    'M': '--',
+    'N': '-.',
+    'O': '---',
+    'P': '.--.',
+    'Q': '--.-',
+    'R': '.-.',
+    'S': '...',
+    'T': '-',
+    'U': '..-',
+    'V': '...-',
+    'W': '.--',
+    'X': '-..-',
+    'Y': '-.--',
+    'Z': '--..',
+    '0': '-----',
+    '1': '.----',
+    '2': '..---',
+    '3': '...--',
+    '4': '....-',
+    '5': '.....',
+    '6': '-....',
+    '7': '--...',
+    '8': '---..',
+    '9': '----.',
+  };
 
   // Default character Morse code map (A-Z)
   static const List<String> _defaultCharMap = [
-    ".-", "-...", "-.-.", "-..", ".", // A-E
-    "..-.", "--.", "....", "..", ".---", // F-J
-    "-.-", ".-..", "--", "-.", "---", // K-O
-    ".--.", "--.-", ".-.", "...", "-", // P-T
-    "..-", "...-", ".--", "-..-", "-.--", // U-Y
-    "--..", // Z
+    '.-', '-...', '-.-.', '-..', '.', // A-E
+    '..-.', '--.', '....', '..', '.---', // F-J
+    '-.-', '.-..', '--', '-.', '---', // K-O
+    '.--.', '--.-', '.-.', '...', '-', // P-T
+    '..-', '...-', '.--', '-..-', '-.--', // U-Y
+    '--..', // Z
   ];
 
   // Default numeric Morse code map (0-9)
   static const List<String> _defaultNumericMap = [
-    "-----", ".----", "..---", "...--", "....-", ".....", // 0-5
-    "-....", "--...", "---..", "----.", // 6-9
+    '-----', '.----', '..---', '...--', '....-', '.....', // 0-5
+    '-....', '--...', '---..', '----.', // 6-9
   ];
 
   // Default character reference for Latin alphabet
-  static const String _defaultCharReference = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  static const String _defaultCharReference = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
   // Default numeric reference
-  static const String _defaultNumericReference = "0123456789";
-
-  // Timing durations in milliseconds
-  final int _dotDuration;
-  final int _dashDuration;
-  final int _gapSymbolDuration; // Gap between symbols within same letter
-  final int _gapLetterDuration; // Gap between letters
-  final int _gapWordDuration; // Gap between words
-
-  // Character and Morse code maps
-  final List<String> _charMap;
-  final List<String> _numericMap;
-  final String _charReference; // Reference string for characters
-  final String _numericReference; // Reference string for digits
-  final String _symbolReference; // Reference for dot symbol
-
-  /// Finds the index of a character in the appropriate reference map.
-  ///
-  /// Returns a tuple with:
-  /// - isInt: `true` when matched against [_numericReference], `false` when
-  ///   matched against [_charReference]
-  /// - Index: Position in the corresponding Morse code map
-  ///
-  /// The numeric reference is consulted first, so an entry appearing in both
-  /// references resolves to the numeric map. Lookups are case-insensitive:
-  /// the input is upper-cased and compared against the references as given.
-  ///
-  /// Returns null if the character is not found in any reference map.
-  (bool isInt, int)? _findCharacterIndex(String character) {
-    final char = character.toUpperCase();
-
-    // Try to find in numeric reference map.
-    //
-    // This previously went through a RegExp built by interpolating
-    // _numericReference, which (a) recompiled the pattern on every character,
-    // (b) threw a FormatException when the reference held a regex metacharacter
-    // such as '(', and (c) tested the raw character against an upper-cased
-    // pattern while looking up the upper-cased character. A direct indexOf is
-    // equivalent for the default digit reference and consistent with how the
-    // alphabet reference below is already resolved.
-    final numIndex = _numericReference.indexOf(char);
-    if (numIndex >= 0 && numIndex < _numericMap.length) {
-      return (true, numIndex);
-    }
-
-    // Try to find in alphabet reference map
-    final alphaIndex = _charReference.indexOf(char);
-    if (alphaIndex >= 0 && alphaIndex < _charMap.length) {
-      return (false, alphaIndex);
-    }
-
-    // Character not supported
-    return null;
-  }
-
-  /// Converts text to a sequence of haptic durations in milliseconds.
-  ///
-  /// The list interleaves symbol durations (dot/dash) with gap durations,
-  /// starting with a symbol. Unsupported characters are skipped.
-  ///
-  /// Returns an empty list if input is null or empty.
-  List<int> convertTextToHapticPattern(String? input) {
-    if (input == null || input.isEmpty) return [];
-
-    final hapticPattern = <int>[];
-    var isFirstWord = true;
-
-    for (var i = 0; i < input.length; i++) {
-      final char = input[i].toUpperCase();
-
-      // Handle space character
-      if (char == ' ') {
-        if (!isFirstWord) hapticPattern.add(_gapWordDuration);
-        isFirstWord = false;
-        continue;
-      }
-
-      final charIndex = _findCharacterIndex(char);
-      if (charIndex == null) continue; // Skip unsupported characters
-
-      isFirstWord = false;
-
-      // Get the morse code pattern for this character
-      final morsePattern = charIndex.$1 == false
-          ? _charMap[charIndex.$2]
-          : _numericMap[charIndex.$2];
-
-      // Add haptic durations for each symbol (dot/dash)
-      for (var j = 0; j < morsePattern.length; j++) {
-        hapticPattern.add(
-          morsePattern[j] == _symbolReference ? _dotDuration : _dashDuration,
-        );
-
-        // Add gap between symbols (except after the last symbol)
-        if (j < morsePattern.length - 1) {
-          hapticPattern.add(_gapSymbolDuration);
-        }
-      }
-
-      // Add letter gap after each character (except the last one or before a space)
-      if (i < input.length - 1 && input[i + 1] != ' ') {
-        hapticPattern.add(_gapLetterDuration);
-      }
-    }
-
-    return hapticPattern;
-  }
-
-  /// Converts text to readable Morse code string representation.
-  ///
-  /// Format: ".- -... -.-."  (dots and dashes separated by spaces)
-  /// Words are separated by " / "
-  ///
-  /// Returns null if input is null or empty.
-  String? convertTextToMorseString(String? input) {
-    if (input == null || input.isEmpty) return null;
-
-    final morseText = StringBuffer();
-    var isFirstCharacter = true;
-
-    for (var i = 0; i < input.length; i++) {
-      final char = input[i].toUpperCase();
-
-      // Handle space character
-      if (char == ' ') {
-        if (!isFirstCharacter) {
-          morseText.write(' / ');
-          isFirstCharacter = true;
-        }
-        continue;
-      }
-
-      final charIndex = _findCharacterIndex(char);
-      if (charIndex == null) continue; // Skip unsupported characters
-
-      // Add space between characters
-      if (!isFirstCharacter) morseText.write(' ');
-
-      // Get the morse code for this character
-      final morse = charIndex.$1 == false
-          ? _charMap[charIndex.$2]
-          : _numericMap[charIndex.$2];
-
-      morseText.write(morse);
-      isFirstCharacter = false;
-    }
-
-    return morseText.toString();
-  }
-
-  /// Converts text to both haptic pattern and Morse code string.
-  ///
-  /// Returns a [HapticModel] whose fields are:
-  /// - [HapticModel.text]: the original input
-  /// - [HapticModel.morseCode]: the dot/dash representation
-  /// - [HapticModel.hapticDurations]: the vibration durations
-  ///
-  /// Returns a default-constructed [HapticModel] if input is null or empty.
-  HapticModel convertTextToMorseMap(String? input) {
-    if (input == null || input.isEmpty) return HapticModel();
-    final hapticDurations = convertTextToHapticPattern(input);
-    final morseString = convertTextToMorseString(input);
-    return HapticModel(
-      text: input,
-      morseCode: morseString ?? '',
-      hapticDurations: hapticDurations,
-    );
-  }
+  static const String _defaultNumericReference = '0123456789';
 }

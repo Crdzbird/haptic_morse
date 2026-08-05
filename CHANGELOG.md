@@ -1,3 +1,81 @@
+# 2.0.0
+
+A breaking release. **1.x haptic patterns were played inverted**, and fixing
+that required changing the output. See *Migrating* in the README for a table of
+every renamed member.
+
+### Fixed
+
+- **Haptic patterns are no longer phase-inverted.** `package:vibration` treats
+  index 0 of `pattern` as an *off* delay and alternates off/on from there — the
+  convention shared by Android's `VibrationEffect.createWaveform` and the iOS
+  implementation. 1.x emitted a vibration at index 0, so every dot and dash was
+  played as silence and every gap as a buzz. `toVibrationPattern()` now emits
+  the leading `0`.
+- **Sequences are well formed at every boundary.** Leading whitespace no longer
+  emits a spurious word gap, a trailing unsupported character no longer emits a
+  dangling letter gap, and consecutive spaces no longer emit adjacent gaps
+  (which inverted the phase of everything after them). A word made entirely of
+  unmapped characters no longer produces a second word gap. Gaps are now
+  emitted only *between* two elements that both exist, so none of these can
+  recur.
+- **Characters outside the Basic Multilingual Plane work.** Text is segmented
+  into grapheme clusters, so emoji built from surrogate pairs, variation
+  selectors, or zero-width joiners count as one character. Previously `💧` was
+  split into two surrogate halves and resolved as two separate letters.
+- **The core no longer depends on Flutter.** `package:haptic_morse/haptic_morse.dart`
+  is pure Dart and runs under `dart run` and `dart test`; 1.x pulled in
+  `dart:ui` through the barrel, so even the shipped example could not run.
+
+### Added
+
+- `HapticEvent`, a sealed type with `HapticDot`, `HapticDash`,
+  `HapticSymbolGap`, `HapticLetterGap`, and `HapticWordGap`. Each carries a
+  `duration`, an `isVibration` phase, value equality, and JSON support, so a
+  sequence can be rendered or analysed instead of being an opaque `List<int>`.
+- `List<HapticEvent>.toVibrationPattern()` and `.totalDuration`.
+- `HapticVibration.vibrateText` and `.vibrateEvents`, which connect encoding to
+  playback. Nothing in 1.x linked the two halves, so the inversion bug shipped
+  silently.
+- `dashReference`, alongside `symbolReference`, so custom patterns are
+  unambiguous and can be validated.
+- `String.toVibrationPattern()`.
+- Argument validation on `HapticMorse.custom` — see *Changed*.
+
+### Changed
+
+- **Library split.** `HapticVibration` moved to
+  `package:haptic_morse/haptic_morse_vibration.dart`. `package:vibration` is no
+  longer re-exported, so its releases are no longer implicitly breaking changes
+  for this package.
+- **Renames:** `convertTextToHapticPattern` → `convertTextToHapticEvents`,
+  `convertTextToMorseMap` → `convertTextToModel`, `String.toMorseMap` →
+  `toMorseModel`, `String.toHapticPattern` → `toHapticEvents`.
+- `HapticModel.hapticDurations` is replaced by `events`, with
+  `toVibrationPattern()` and `totalDuration` alongside it. The JSON shape
+  changed accordingly: `hapticDurations: [100, 300]` becomes
+  `events: [{"type": "dot", "duration": 100}, ...]`.
+- **`HapticMorse()` is now parameterless** and `const`; it is always valid, so
+  it needs no validation. All customization moved to `HapticMorse.custom`,
+  which throws `ArgumentError` when a map and its reference differ in length, a
+  reference repeats a character, a pattern is empty or uses characters other
+  than the configured dot and dash, or a duration is not positive. 1.x accepted
+  all of these and silently dropped letters from the output.
+- Choosing custom dot/dash symbols now re-spells whichever built-in map you did
+  not override, so `HapticMorse.custom(symbolReference: '0')` keeps the
+  standard alphabet rather than rejecting it.
+- **The string extensions take an optional `HapticMorse`** instead of repeating
+  eleven parameters on each method:
+  `'SOS'.toMorseString(HapticMorse.custom(dotDuration: 80))`.
+- `convertTextToMorseString` returns `null` — not `''` — when the input holds
+  no mappable characters, making its contract consistent.
+- Character lookup uses a map built once at construction rather than scanning
+  reference strings per character.
+- Added `characters` as a dependency.
+- CI runs the core test suite on the plain Dart SDK
+  (`dart test --exclude-tags flutter`), which fails if anything in the core
+  starts importing Flutter.
+
 # 1.0.6
 
 Correctness and tooling release. **Haptic pattern output is unchanged** — the

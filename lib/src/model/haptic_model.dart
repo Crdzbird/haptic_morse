@@ -1,7 +1,10 @@
 import 'dart:collection';
 import 'dart:convert';
 
-/// Haptic Model for storing text, Morse code, and haptic durations.
+import 'haptic_event.dart';
+
+/// The result of converting text to Morse code: the original text, its dot
+/// and dash representation, and the haptic sequence that plays it.
 final class HapticModel {
   /// The original text input.
   final String text;
@@ -9,42 +12,48 @@ final class HapticModel {
   /// The Morse code representation of the text.
   final String morseCode;
 
-  /// Backing store for [hapticDurations].
+  /// Backing store for [events].
   ///
   /// Kept private so the list cannot be mutated through the public getter.
-  final List<int> _hapticDurations;
+  final List<HapticEvent> _events;
 
   /// Creates a new [HapticModel].
   const HapticModel({
     this.text = '',
     this.morseCode = '',
-    List<int> hapticDurations = const [],
-  }) : _hapticDurations = hapticDurations;
+    List<HapticEvent> events = const [],
+  }) : _events = events;
 
-  /// The durations for each haptic feedback event.
+  /// The haptic sequence for [text].
   ///
   /// This is an unmodifiable view: adding to or removing from the returned
-  /// list throws [UnsupportedError]. Pass a new list to [copyWith] to change
-  /// the durations.
-  List<int> get hapticDurations => UnmodifiableListView(_hapticDurations);
+  /// list throws [UnsupportedError]. Pass a new list to [copyWith] instead.
+  List<HapticEvent> get events => UnmodifiableListView(_events);
+
+  /// The sequence as a pattern for `Vibration.vibrate`.
+  ///
+  /// See [HapticEventPattern.toVibrationPattern] for the exact convention.
+  List<int> toVibrationPattern() => _events.toVibrationPattern();
+
+  /// How long the full sequence takes to play, in milliseconds.
+  int get totalDuration => _events.totalDuration;
 
   /// Creates a [HapticModel] from a [Map<String, dynamic>].
   ///
-  /// Entries in `hapticDurations` are accepted as any [num] and truncated to
-  /// [int], so JSON payloads that encode durations as doubles
-  /// (`[100.0, 300.0]`) round-trip instead of throwing.
+  /// Expects `events` to be a list of maps in the shape produced by
+  /// [HapticEvent.toJson]. Throws [ArgumentError] on an unrecognized event.
   factory HapticModel.fromMap(Map<String, dynamic>? map) {
     if (map == null) return const HapticModel();
     return HapticModel(
       text: map['text'] as String? ?? '',
       morseCode: map['morseCode'] as String? ?? '',
-      hapticDurations: (map['hapticDurations'] as List<dynamic>? ?? const [])
-          .map((e) => (e as num).toInt())
+      events: (map['events'] as List<dynamic>? ?? const [])
+          .map((e) => HapticEvent.fromJson(e as Map<String, dynamic>))
           .toList(growable: false),
     );
   }
 
-  /// Creates a [HapticModel] from JSON string or map.
+  /// Creates a [HapticModel] from a JSON string or an already-decoded map.
   factory HapticModel.fromJson(dynamic data) {
     if (data == null || '$data'.isEmpty) return const HapticModel();
     if (data is String) {
@@ -58,7 +67,7 @@ final class HapticModel {
   Map<String, dynamic> toJson() => {
         'text': text,
         'morseCode': morseCode,
-        'hapticDurations': List<int>.of(_hapticDurations),
+        'events': _events.map((e) => e.toJson()).toList(growable: false),
       };
 
   /// Converts this object into a JSON string.
@@ -68,12 +77,12 @@ final class HapticModel {
   HapticModel copyWith({
     String? text,
     String? morseCode,
-    List<int>? hapticDurations,
+    List<HapticEvent>? events,
   }) {
     return HapticModel(
       text: text ?? this.text,
       morseCode: morseCode ?? this.morseCode,
-      hapticDurations: hapticDurations ?? _hapticDurations,
+      events: events ?? _events,
     );
   }
 
@@ -83,21 +92,20 @@ final class HapticModel {
       other is HapticModel &&
           other.text == text &&
           other.morseCode == morseCode &&
-          _durationsEqual(other._hapticDurations, _hapticDurations);
+          _eventsEqual(other._events, _events);
 
   @override
-  int get hashCode =>
-      Object.hash(text, morseCode, Object.hashAll(_hapticDurations));
+  int get hashCode => Object.hash(text, morseCode, Object.hashAll(_events));
 
   @override
   String toString() => 'HapticModel(text: $text, morseCode: $morseCode, '
-      'hapticDurations: $_hapticDurations)';
+      'events: ${_events.length}, totalDuration: ${totalDuration}ms)';
 
   /// Element-wise list comparison.
   ///
-  /// Implemented locally rather than depending on `package:collection` or
-  /// `flutter/foundation.dart`, so this file stays dependency-free.
-  static bool _durationsEqual(List<int> a, List<int> b) {
+  /// Implemented locally rather than depending on `package:collection`, so the
+  /// core of this package stays free of non-essential dependencies.
+  static bool _eventsEqual(List<HapticEvent> a, List<HapticEvent> b) {
     if (identical(a, b)) return true;
     if (a.length != b.length) return false;
     for (var i = 0; i < a.length; i++) {

@@ -1,17 +1,77 @@
 import 'package:vibration/vibration.dart';
 
-/// Vibration utility for haptic feedback.
+import '../model/haptic_event.dart';
+import 'haptic_morse.dart';
+
+/// Plays haptic Morse sequences on the device motor.
+///
+/// This is the only part of the package that depends on Flutter and on
+/// `package:vibration`; it lives in a separate library so the encoder stays
+/// usable from plain Dart:
+///
+/// ```dart
+/// import 'package:haptic_morse/haptic_morse_vibration.dart';
+///
+/// const haptics = HapticVibration();
+/// await haptics.vibrateText('SOS');
+/// ```
+///
+/// Supported on Android and iOS only.
 final class HapticVibration {
-  /// Constructor to prevent instantiation.
+  /// Creates a vibration controller.
   const HapticVibration();
 
+  /// Converts [text] to Morse and plays it.
+  ///
+  /// Pass [morse] to override the timings or alphabet. Returns without
+  /// touching the motor when [text] contains nothing encodable.
+  ///
+  /// [amplitude] is the motor strength from 1 to 255 where supported, or -1
+  /// for the device default. [sharpness] is iOS only.
+  Future<void> vibrateText(
+    String text, {
+    HapticMorse morse = const HapticMorse(),
+    int amplitude = -1,
+    double sharpness = 0.5,
+  }) =>
+      vibrateEvents(
+        morse.convertTextToHapticEvents(text),
+        amplitude: amplitude,
+        sharpness: sharpness,
+      );
+
+  /// Plays an existing haptic sequence.
+  ///
+  /// The sequence is converted with
+  /// [HapticEventPattern.toVibrationPattern], which inserts the leading off
+  /// delay the platform expects. Returns without touching the motor when
+  /// [events] is empty.
+  Future<void> vibrateEvents(
+    List<HapticEvent> events, {
+    int amplitude = -1,
+    double sharpness = 0.5,
+  }) async {
+    if (events.isEmpty) return;
+    await vibrate(
+      pattern: events.toVibrationPattern(),
+      amplitude: amplitude,
+      sharpness: sharpness,
+    );
+  }
+
   /// Vibrate with the given parameters.
+  ///
+  /// A thin pass-through to `Vibration.vibrate` for callers that already have
+  /// a pattern. Note that index 0 of [pattern] is an *off* delay and the list
+  /// alternates off/on from there; prefer [vibrateEvents], which handles that
+  /// convention for you.
+  ///
   /// [duration] The duration of the vibration in milliseconds.
   /// [pattern] The vibration pattern as a list of durations.
-  /// [repeat] The number of times to repeat the pattern.
+  /// [repeat] The index to repeat from, or -1 for no repeat.
   /// [intensities] The intensity levels for each vibration segment.
-  /// [amplitude] The amplitude of the vibration (0-255).
-  /// [sharpness] The sharpness of the vibration (0.0-1.0).
+  /// [amplitude] The amplitude of the vibration (1-255, or -1 for default).
+  /// [sharpness] The sharpness of the vibration (0.0-1.0). iOS only.
   Future<void> vibrate({
     int duration = 500,
     List<int> pattern = const [],

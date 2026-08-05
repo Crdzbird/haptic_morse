@@ -2,55 +2,81 @@ import 'package:haptic_morse/haptic_morse.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('StringMorseExtension', () {
-    test('toMorseString returns correct Morse code for "SOS"', () {
-      final morse = 'SOS'.toMorseString();
-      expect(morse, '... --- ...');
-    });
+  const morse = HapticMorse();
 
-    test('toMorseString returns correct Morse code for "HELLO WORLD"', () {
-      final morse = 'HELLO WORLD'.toMorseString();
-      expect(morse, '.... . .-.. .-.. --- / .-- --- .-. .-.. -..');
-    });
-
-    test('toHapticPattern returns a non-empty list for "A"', () {
-      final pattern = 'A'.toHapticPattern();
-      expect(pattern, isA<List<int>>());
-      expect(pattern.isNotEmpty, true);
-    });
-
-    test('toMorseMap returns correct map structure for "E"', () {
-      final map = 'E'.toMorseMap();
-      expect(map, isA<HapticModel>());
-      expect(map.hapticDurations, isNotEmpty);
-      expect(map.morseCode, isNotEmpty);
-      expect(map.text, isNotEmpty);
-    });
-
-    test('toMorseString returns null for empty string', () {
-      final morse = ''.toMorseString();
-      expect(morse, isNull);
-    });
-
-    test('toHapticPattern returns empty list for empty string', () {
-      final pattern = ''.toHapticPattern();
-      expect(pattern, isEmpty);
-    });
-
-    test('toMorseMap returns expected values for "123"', () {
-      final map = '123'.toMorseMap();
-      expect(map.text, isNotEmpty);
-      expect(map.hapticDurations, isNotEmpty);
-      expect(map.morseCode, isNotEmpty);
-    });
-
-    test('Custom parameters are passed through', () {
-      final morse = 'A'.toMorseString(
-        symbolReference: '*',
-        charMap: ['*-'],
+  group('defaults to standard International Morse Code', () {
+    test('toMorseString', () {
+      expect('SOS'.toMorseString(), '... --- ...');
+      expect(
+        'HELLO WORLD'.toMorseString(),
+        '.... . .-.. .-.. --- / .-- --- .-. .-.. -..',
       );
-      // Should use '*' for dot and '_' for dash
-      expect(morse, '*-');
     });
+
+    test('toHapticEvents', () {
+      expect('E'.toHapticEvents(), [const HapticDot(100)]);
+    });
+
+    test('toMorseModel', () {
+      expect('SOS'.toMorseModel(), morse.convertTextToModel('SOS'));
+    });
+
+    test('toVibrationPattern', () {
+      expect('E'.toVibrationPattern(), [0, 100]);
+    });
+  });
+
+  group('delegates to the instance it is given', () {
+    final fast = HapticMorse.custom(dotDuration: 10, dashDuration: 20);
+
+    test('toMorseString', () {
+      expect('A'.toMorseString(fast), morse.convertTextToMorseString('A'));
+    });
+
+    test('toHapticEvents honours custom timings', () {
+      expect('E'.toHapticEvents(fast), [const HapticDot(10)]);
+      expect('T'.toHapticEvents(fast), [const HapticDash(20)]);
+    });
+
+    test('toMorseModel honours custom timings', () {
+      expect('E'.toMorseModel(fast).totalDuration, 10);
+    });
+
+    test('toVibrationPattern honours custom timings', () {
+      expect('E'.toVibrationPattern(fast), [0, 10]);
+    });
+
+    test('a custom alphabet resolves through the extension', () {
+      final custom = HapticMorse.custom(
+        charMap: ['.-', '--'],
+        charReference: '💧🔥',
+      );
+
+      expect('💧🔥'.toMorseString(custom), '.- --');
+    });
+  });
+
+  group('empty input', () {
+    test('toMorseString returns null', () {
+      expect(''.toMorseString(), isNull);
+      expect('   '.toMorseString(), isNull);
+      expect('!!!'.toMorseString(), isNull);
+    });
+
+    test('the sequence forms are empty', () {
+      expect(''.toHapticEvents(), isEmpty);
+      expect(''.toVibrationPattern(), isEmpty);
+      expect(''.toMorseModel(), const HapticModel());
+    });
+  });
+
+  test('each form agrees with the others', () {
+    const input = 'HELLO WORLD';
+    final model = input.toMorseModel();
+
+    expect(model.text, input);
+    expect(model.morseCode, input.toMorseString());
+    expect(model.events, input.toHapticEvents());
+    expect(model.toVibrationPattern(), input.toVibrationPattern());
   });
 }

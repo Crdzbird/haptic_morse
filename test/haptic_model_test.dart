@@ -1,333 +1,205 @@
 import 'dart:convert';
+
 import 'package:haptic_morse/haptic_morse.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group(HapticModel, () {
-    const testHapticModel = HapticModel(
-      text: 'Hello',
-      morseCode: '.... . .-.. .-.. ---',
-      hapticDurations: [100, 100, 100, 100, 100, 300, 100, 100, 100, 100, 100],
-    );
+  const morse = HapticMorse();
 
-    group('constructor', () {
-      test('creates instance with default values', () {
-        const hapticModel = HapticModel();
-        expect(hapticModel.text, '');
-        expect(hapticModel.morseCode, '');
-        expect(hapticModel.hapticDurations, []);
-      });
+  const sample = HapticModel(
+    text: 'A',
+    morseCode: '.-',
+    events: [HapticDot(100), HapticSymbolGap(100), HapticDash(300)],
+  );
 
-      test('creates instance with provided values', () {
-        expect(testHapticModel.text, 'Hello');
-        expect(testHapticModel.morseCode, '.... . .-.. .-.. ---');
-        expect(testHapticModel.hapticDurations,
-            [100, 100, 100, 100, 100, 300, 100, 100, 100, 100, 100]);
-      });
+  group('construction', () {
+    test('defaults to empty', () {
+      const model = HapticModel();
 
-      test('creates instance with provided values', () {
-        expect(testHapticModel.text, 'Hello');
-        expect(testHapticModel.morseCode, '.... . .-.. .-.. ---');
-        expect(testHapticModel.hapticDurations,
-            [100, 100, 100, 100, 100, 300, 100, 100, 100, 100, 100]);
+      expect(model.text, '');
+      expect(model.morseCode, '');
+      expect(model.events, isEmpty);
+      expect(model.totalDuration, 0);
+      expect(model.toVibrationPattern(), isEmpty);
+    });
+
+    test('carries the values it was given', () {
+      expect(sample.text, 'A');
+      expect(sample.morseCode, '.-');
+      expect(sample.events, hasLength(3));
+      expect(sample.totalDuration, 500);
+    });
+  });
+
+  group('value equality', () {
+    test('runtime instances with equal fields are equal', () {
+      final a = morse.convertTextToModel('SOS');
+      final b = morse.convertTextToModel('SOS');
+
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+    });
+
+    test('differs when any field differs', () {
+      expect(sample, isNot(equals(sample.copyWith(text: 'B'))));
+      expect(sample, isNot(equals(sample.copyWith(morseCode: '-...'))));
+      expect(
+        sample,
+        isNot(equals(sample.copyWith(events: const [HapticDot(100)]))),
+      );
+    });
+
+    test('events are compared element-wise, not by identity', () {
+      final a = HapticModel(
+        events: [const HapticDot(100), const HapticDash(300)],
+      );
+      final b = HapticModel(
+        events: [const HapticDot(100), const HapticDash(300)].toList(),
+      );
+
+      expect(a, equals(b));
+    });
+
+    test('works as a Set key', () {
+      final set = {
+        morse.convertTextToModel('A'),
+        morse.convertTextToModel('A'),
+        morse.convertTextToModel('B'),
+      };
+
+      expect(set, hasLength(2));
+    });
+
+    test('toString summarizes without dumping every event', () {
+      expect(sample.toString(), contains('A'));
+      expect(sample.toString(), contains('.-'));
+      expect(sample.toString(), contains('500'));
+    });
+  });
+
+  group('events is unmodifiable', () {
+    test('add throws', () {
+      final model = morse.convertTextToModel('A');
+
+      expect(
+        () => model.events.add(const HapticDot(1)),
+        throwsUnsupportedError,
+      );
+      expect(model.events, hasLength(3));
+    });
+
+    test('clear throws', () {
+      expect(sample.events.clear, throwsUnsupportedError);
+    });
+  });
+
+  group('copyWith', () {
+    test('with no arguments produces an equal but distinct instance', () {
+      final copy = sample.copyWith();
+
+      expect(identical(copy, sample), isFalse);
+      expect(copy, equals(sample));
+    });
+
+    test('updates only what it is given', () {
+      final copy = sample.copyWith(text: 'B');
+
+      expect(copy.text, 'B');
+      expect(copy.morseCode, sample.morseCode);
+      expect(copy.events, sample.events);
+    });
+
+    test('updates every field', () {
+      final copy = sample.copyWith(
+        text: 'E',
+        morseCode: '.',
+        events: const [HapticDot(100)],
+      );
+
+      expect(
+        copy,
+        const HapticModel(
+          text: 'E',
+          morseCode: '.',
+          events: [HapticDot(100)],
+        ),
+      );
+    });
+  });
+
+  group('JSON', () {
+    test('toJson has the documented shape', () {
+      expect(sample.toJson(), {
+        'text': 'A',
+        'morseCode': '.-',
+        'events': [
+          {'type': 'dot', 'duration': 100},
+          {'type': 'symbolGap', 'duration': 100},
+          {'type': 'dash', 'duration': 300},
+        ],
       });
     });
 
-    group('fromMap', () {
-      test('creates instance from null map', () {
-        final hapticModel = HapticModel.fromMap(null);
-        expect(hapticModel, isNotNull);
-      });
+    test('round-trips through encode and fromJson', () {
+      final original = morse.convertTextToModel('HELLO WORLD');
 
-      test('creates instance from empty map', () {
-        final hapticModel = HapticModel.fromMap(const <String, dynamic>{});
-        expect(hapticModel, isNotNull);
-      });
-
-      test('creates instance from complete map', () {
-        final map = <String, dynamic>{
-          'text': 'Hello',
-          'morseCode': '.... . .-.. .-.. ---',
-          'hapticDurations': [
-            100,
-            100,
-            100,
-            100,
-            100,
-            300,
-            100,
-            100,
-            100,
-            100,
-            100
-          ],
-        };
-
-        final hapticModel = HapticModel.fromMap(map);
-        expect(hapticModel.text, 'Hello');
-        expect(hapticModel.morseCode, '.... . .-.. .-.. ---');
-        expect(hapticModel.hapticDurations,
-            [100, 100, 100, 100, 100, 300, 100, 100, 100, 100, 100]);
-      });
-
-      test('handles null values in map', () {
-        final map = <String, dynamic>{
-          'text': null,
-          'morseCode': null,
-          'hapticDurations': null,
-        };
-
-        final hapticModel = HapticModel.fromMap(map);
-        expect(hapticModel, isNotNull);
-      });
-
-      test('handles partial map', () {
-        final map = <String, dynamic>{
-          'text': 'Advanced Programming',
-          'morseCode': '',
-          'hapticDurations': [],
-        };
-
-        final hapticModel = HapticModel.fromMap(map);
-        expect(hapticModel.text, 'Advanced Programming');
-        expect(hapticModel.morseCode, '');
-        expect(hapticModel.hapticDurations, []);
-      });
-
-      test('handles text', () {
-        final map = <String, dynamic>{
-          'text': 'Hello',
-        };
-
-        final hapticModel = HapticModel.fromMap(map);
-        expect(hapticModel.text, 'Hello');
-      });
-
-      test('handles morseCode', () {
-        final map = <String, dynamic>{
-          'morseCode': '.... . .-.. .-.. ---',
-        };
-
-        final hapticModel = HapticModel.fromMap(map);
-        expect(hapticModel.morseCode, '.... . .-.. .-.. ---');
-      });
-
-      test('handles hapticDurations', () {
-        final map = <String, dynamic>{
-          'hapticDurations': [100, 200, 300],
-        };
-
-        final hapticModel = HapticModel.fromMap(map);
-        expect(hapticModel.hapticDurations, [100, 200, 300]);
-      });
+      expect(HapticModel.fromJson(original.encode()), equals(original));
     });
 
-    group('fromJson', () {
-      test('creates instance from null', () {
-        final hapticModel = HapticModel.fromJson(null);
-        expect(hapticModel, isNotNull);
-      });
-
-      test('creates instance from empty string', () {
-        final hapticModel = HapticModel.fromJson('');
-        expect(hapticModel, isNotNull);
-      });
-
-      test('creates instance from JSON string', () {
-        final jsonString = json.encode({
-          'text': 'Hello',
-          'morseCode': '.... . .-.. .-.. ---',
-          'hapticDurations': [
-            100,
-            100,
-            100,
-            100,
-            100,
-            300,
-            100,
-            100,
-            100,
-            100,
-            100
-          ],
-        });
-
-        final hapticModel = HapticModel.fromJson(jsonString);
-        expect(hapticModel.hapticDurations, testHapticModel.hapticDurations);
-        expect(hapticModel.text, testHapticModel.text);
-        expect(hapticModel.morseCode, testHapticModel.morseCode);
-      });
-
-      test('creates instance from Map<String, dynamic>', () {
-        final map = <String, dynamic>{
-          'text': 'Hello',
-          'morseCode': '.... . .-.. .-.. ---',
-          'hapticDurations': [
-            100,
-            100,
-            100,
-            100,
-            100,
-            300,
-            100,
-            100,
-            100,
-            100,
-            100
-          ],
-        };
-
-        final hapticModel = HapticModel.fromJson(map);
-        expect(hapticModel.text, 'Hello');
-        expect(hapticModel.morseCode, '.... . .-.. .-.. ---');
-        expect(hapticModel.hapticDurations,
-            [100, 100, 100, 100, 100, 300, 100, 100, 100, 100, 100]);
-      });
-
-      test('throws ArgumentError for invalid data type', () {
-        expect(
-          () => HapticModel.fromJson(123),
-          throwsA(isA<ArgumentError>()),
-        );
-      });
-
-      test('throws ArgumentError for list data type', () {
-        expect(
-          () => HapticModel.fromJson(const [1, 2, 3]),
-          throwsA(isA<ArgumentError>()),
-        );
-      });
-
-      test('throws ArgumentError for boolean data type', () {
-        expect(
-          () => HapticModel.fromJson(true),
-          throwsA(isA<ArgumentError>()),
-        );
-      });
+    test('round-trips through toJson and fromMap', () {
+      expect(HapticModel.fromMap(sample.toJson()), equals(sample));
     });
 
-    group('toJson', () {
-      test('converts to JSON map correctly', () {
-        final json = testHapticModel.toJson();
-        final expectedJson = <String, dynamic>{
-          'text': 'Hello',
-          'morseCode': '.... . .-.. .-.. ---',
-          'hapticDurations': [
-            100,
-            100,
-            100,
-            100,
-            100,
-            300,
-            100,
-            100,
-            100,
-            100,
-            100
-          ],
-        };
+    test('encode produces valid JSON', () {
+      final decoded = json.decode(sample.encode()) as Map<String, dynamic>;
 
-        expect(json, expectedJson);
-      });
-
-      test('converts empty course list to JSON map', () {
-        const hapticModel = HapticModel();
-        final json = hapticModel.toJson();
-        final expectedJson = <String, dynamic>{
-          'text': '',
-          'morseCode': '',
-          'hapticDurations': [],
-        };
-
-        expect(json, expectedJson);
-      });
+      expect(decoded['text'], 'A');
+      expect(decoded['morseCode'], '.-');
+      expect(decoded['events'], hasLength(3));
     });
 
-    group('encode', () {
-      test('encodes to JSON string correctly', () {
-        final jsonString = testHapticModel.encode();
-        final decodedMap = json.decode(jsonString) as Map<String, dynamic>;
-
-        expect(decodedMap['text'], 'Hello');
-        expect(decodedMap['morseCode'], '.... . .-.. .-.. ---');
-        expect(decodedMap['hapticDurations'],
-            [100, 100, 100, 100, 100, 300, 100, 100, 100, 100, 100]);
-      });
-
-      test('encodes empty course list to JSON string', () {
-        const hapticModel = HapticModel();
-        final jsonString = hapticModel.encode();
-        final decodedMap = json.decode(jsonString) as Map<String, dynamic>;
-
-        expect(decodedMap['text'], '');
-        expect(decodedMap['morseCode'], '');
-        expect(decodedMap['hapticDurations'], []);
-      });
+    test('fromJson accepts an already-decoded map', () {
+      expect(HapticModel.fromJson(sample.toJson()), equals(sample));
     });
 
-    group('copyWith', () {
-      test('returns same instance when no parameters provided', () {
-        final copied = testHapticModel.copyWith();
-        expect(identical(copied, testHapticModel), false);
-      });
+    test('fromJson treats null and empty as an empty model', () {
+      expect(HapticModel.fromJson(null), const HapticModel());
+      expect(HapticModel.fromJson(''), const HapticModel());
+      expect(HapticModel.fromMap(null), const HapticModel());
+    });
 
-      test('updates only specified parameters', () {
-        final copied = testHapticModel.copyWith(
-          text: 'Advanced Haptic Feedback',
-          morseCode: '.... . .-.. .-.. ---',
-          hapticDurations: [
-            100,
-            100,
-            100,
-            100,
-            100,
-            300,
-            100,
-            100,
-            100,
-            100,
-            100
+    test('fromMap tolerates missing keys', () {
+      expect(HapticModel.fromMap(const {}), const HapticModel());
+      expect(
+        HapticModel.fromMap(const {'text': 'A'}),
+        const HapticModel(text: 'A'),
+      );
+    });
+
+    test('fromJson rejects unsupported input types', () {
+      expect(() => HapticModel.fromJson(42), throwsArgumentError);
+      expect(() => HapticModel.fromJson(true), throwsArgumentError);
+      expect(() => HapticModel.fromJson(<int>[1, 2]), throwsArgumentError);
+    });
+
+    test('fromMap rejects a malformed event', () {
+      expect(
+        () => HapticModel.fromMap({
+          'events': [
+            {'type': 'wobble', 'duration': 1},
           ],
-        );
+        }),
+        throwsArgumentError,
+      );
+    });
+  });
 
-        expect(copied.text, 'Advanced Haptic Feedback');
-        expect(copied.morseCode, '.... . .-.. .-.. ---');
-        expect(copied.hapticDurations,
-            [100, 100, 100, 100, 100, 300, 100, 100, 100, 100, 100]);
-      });
+  group('vibration pattern', () {
+    test('matches the sequence it was built from', () {
+      final model = morse.convertTextToModel('SOS');
 
-      test('updates all parameters', () {
-        final copied = testHapticModel.copyWith(
-          text: 'Data Science Fundamentals',
-          morseCode: '.... . .-.. .-.. ---',
-          hapticDurations: [
-            100,
-            100,
-            100,
-            100,
-            100,
-            300,
-            100,
-            100,
-            100,
-            100,
-            100
-          ],
-        );
-
-        expect(copied.text, 'Data Science Fundamentals');
-        expect(copied.morseCode, '.... . .-.. .-.. ---');
-        expect(copied.hapticDurations,
-            [100, 100, 100, 100, 100, 300, 100, 100, 100, 100, 100]);
-      });
-
-      test('no update parameter', () {
-        final copied = testHapticModel.copyWith();
-
-        expect(copied.text, testHapticModel.text);
-        expect(copied.morseCode, testHapticModel.morseCode);
-        expect(copied.hapticDurations, testHapticModel.hapticDurations);
-      });
+      expect(model.toVibrationPattern(), model.events.toVibrationPattern());
+      expect(model.toVibrationPattern().first, 0);
     });
   });
 }

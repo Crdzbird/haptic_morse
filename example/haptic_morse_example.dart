@@ -1,21 +1,45 @@
 // ignore_for_file: avoid_print
 
+// This example is pure Dart — run it with `dart run`:
+//
+//   dart run example/haptic_morse_example.dart
+//
+// Driving the motor needs the companion library and a device; see the
+// commented section at the end.
 import 'package:haptic_morse/haptic_morse.dart';
 
 void main() {
   // 1. Standard International Morse Code.
-  final morse = HapticMorse();
+  const morse = HapticMorse();
 
-  final model = morse.convertTextToMorseMap('HELLO WORLD');
+  final model = morse.convertTextToModel('HELLO WORLD');
   print(model.text); // HELLO WORLD
   print(model.morseCode); // .... . .-.. .-.. --- / .-- --- .-. .-.. -..
-  print(model.hapticDurations); // [100, 100, 100, ...]
+  print('${model.events.length} events, ${model.totalDuration}ms');
 
   // 2. The same thing straight off a String.
   print('SOS'.toMorseString()); // ... --- ...
-  print('SOS'.toHapticPattern()); // [100, 100, 100, ...]
 
-  // 3. Custom timings — a faster "fist".
+  // 3. The vibration pattern.
+  //
+  // Index 0 is an *off* delay and the list alternates off/on from there,
+  // which is what Android's createWaveform and iOS both expect. Hand this
+  // straight to Vibration.vibrate(pattern: ...).
+  print('SOS'.toVibrationPattern()); // [0, 100, 100, 100, ...]
+
+  // 4. Inspect the sequence symbolically.
+  for (final event in 'SO'.toHapticEvents()) {
+    final label = switch (event) {
+      HapticDot() => 'dot',
+      HapticDash() => 'dash',
+      HapticSymbolGap() => 'symbol gap',
+      HapticLetterGap() => 'letter gap',
+      HapticWordGap() => 'word gap',
+    };
+    print('  $label — ${event.duration}ms');
+  }
+
+  // 5. Custom timings — a faster "fist".
   final fast = HapticMorse.custom(
     dotDuration: 80,
     dashDuration: 240,
@@ -23,25 +47,29 @@ void main() {
     gapLetterDuration: 240,
     gapWordDuration: 560,
   );
-  print(fast.convertTextToHapticPattern('SOS'));
+  print('SOS'.toVibrationPattern(fast));
 
-  // 4. Custom character mappings.
+  // 6. Custom alphabets, including emoji.
   //
-  // Every character in charReference must be a single UTF-16 code unit.
-  // Kanji qualify; emoji outside the Basic Multilingual Plane do not.
-  final custom = HapticMorse.custom(
-    charMap: ['.-', '-...', '..--', '.-.-'],
-    charReference: 'AB日水',
+  // Text is segmented into grapheme clusters, so multi-code-unit characters
+  // count as one.
+  final emoji = HapticMorse.custom(
+    charMap: ['.-', '--'],
+    charReference: '💧🔥',
   );
-  print(custom.convertTextToMorseString('AB日水')); // .- -... ..-- .-.-
+  print(emoji.convertTextToMorseString('💧🔥')); // .- --
 
-  // 5. HapticModel is a value type: equal content compares equal.
-  print(morse.convertTextToMorseMap('SOS') == 'SOS'.toMorseMap()); // true
+  // 7. Misconfiguration fails loudly instead of silently dropping letters.
+  try {
+    HapticMorse.custom(charMap: ['.-'], charReference: 'ABC');
+  } on ArgumentError catch (e) {
+    print('rejected: ${e.message}');
+  }
 
-  // 6. To actually vibrate (Android/iOS only), hand the pattern to
-  //    HapticVibration. See the README for the leading-zero caveat that
-  //    version 2.0.0 will fix.
+  // 8. To actually vibrate (Android/iOS only):
   //
-  //    const haptics = HapticVibration();
-  //    await haptics.vibrate(pattern: [0, ...'SOS'.toHapticPattern()]);
+  //   import 'package:haptic_morse/haptic_morse_vibration.dart';
+  //
+  //   const haptics = HapticVibration();
+  //   await haptics.vibrateText('SOS');
 }

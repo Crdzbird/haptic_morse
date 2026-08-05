@@ -4,90 +4,125 @@
 [![pub package](https://img.shields.io/pub/v/haptic_morse.svg)](https://pub.dev/packages/haptic_morse)
 [![pub points](https://img.shields.io/pub/points/haptic_morse.svg)](https://pub.dev/packages/haptic_morse/score)
 
-
-
 *Your Words, in Vibes & Dashes*
 
-[![codecov](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](#)
+[![coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)](#-test-coverage)
 [![Dart](https://img.shields.io/badge/Dart-Stable-blue.svg)](https://dart.dev)
-[![Vibration-Powered](https://img.shields.io/badge/Powered_By-Haptics-ff69b4.svg)](#)
+[![Vibration-Powered](https://img.shields.io/badge/Powered_By-Haptics-ff69b4.svg)](#-vibrate-module)
 
 ---
 
 ## 🚀 Introduction
 
-**HapticMorse** is a powerful, customizable Dart library that brings **Morse code** to life — not just in symbols, but in **vibrations**. Whether you're building accessibility tools, games, messaging apps, or just love Morse code (who doesn’t?), this package translates any text input into:
+**HapticMorse** turns text into Morse code — not just as symbols, but as
+vibration you can feel. It gives you:
 
-✨ **Readable Morse Code**
-📳 **Haptic Feedback Patterns**
-🔠 **Custom Symbol Mappings** — including **non-Latin** characters!
+✨ **Readable Morse code**
+📳 **Haptic sequences** that play correctly on Android and iOS
+🔠 **Custom alphabets** — any script, and emoji
 
-All wrapped in a single elegant, performant class.
-
----
-
-## 🎯 Features
-
-* 🔠 Convert text (`A-Z`, `0-9`) to **Morse code** strings (`.-- --- .-. -.. ...`)
-* 📳 Generate **haptic patterns** for dots, dashes, and all gaps
-* 🧩 Fully **customizable character & digit mappings** — even for **non-Latin** alphabets!
-* ⚙️ Custom **timing control** (dot, dash, gaps) for complete UX freedom
-* 🧠 Smart parsing & fallback for unsupported characters
-* ✅ **100% Test Coverage** — we've tested every buzz 💯
+The encoder is **pure Dart**, so it runs in a CLI, on a server, in `dart test`,
+and in Flutter. The motor-driving half lives in a separate library you only
+import when you need it.
 
 ---
 
-## 🌍 International & Custom Support
+## 📦 Installation
 
-You’re not limited to just English! Add **custom mappings** for other languages and symbols.
-
-```dart
-final morse = HapticMorse.custom(
-  charMap: ['.-', '-...', '..--', '.-.-'], // Your custom Morse patterns
-  charReference: 'AB日水', // Must match the map's order
-  numericMap: ['-----', '.----', '..---', '...--'],
-  numericReference: '0123', // Also in order
-);
-
-final output = morse.convertTextToMorseString('AB日水');
-print(output); // .- -... ..-- .-.-
+```yaml
+dependencies:
+  haptic_morse: ^2.0.0
 ```
 
-> **Character support:** references are matched by UTF-16 code unit, so every
-> character in `charReference` / `numericReference` must be a single code unit.
-> Most scripts qualify — including Japanese Kanji such as `日水` — but characters
-> outside the Basic Multilingual Plane (most emoji, e.g. `💧`) are surrogate
-> pairs and will **not** match correctly. Emoji in `charMap` values are likewise
-> read as several symbols rather than one. Full rune support is planned for
-> 2.0.0.
+Two entry points:
+
+```dart
+// Pure Dart. Encoding, patterns, models. Works everywhere.
+import 'package:haptic_morse/haptic_morse.dart';
+
+// Flutter + package:vibration. Android and iOS only.
+import 'package:haptic_morse/haptic_morse_vibration.dart';
+```
 
 ---
 
 ## 🛠️ Usage
 
-### ✅ Default Usage
-
-`convertTextToMorseMap` returns a [`HapticModel`](#-api-overview) — a value type
-with `==`, `hashCode`, `copyWith`, and JSON support.
+### ✅ Encoding
 
 ```dart
-final morse = HapticMorse();
+const morse = HapticMorse();
 
-final result = morse.convertTextToMorseMap('HELLO WORLD');
-
-print(result.text);            // "HELLO WORLD"
-print(result.morseCode);       // ".... . .-.. .-.. --- / .-- --- .-. .-.. -.."
-print(result.hapticDurations); // [100, 100, 100, 100, 100, 100, 100, 300, ...]
+print(morse.convertTextToMorseString('SOS')); // ... --- ...
+print('HELLO WORLD'.toMorseString());
+// .... . .-.. .-.. --- / .-- --- .-. .-.. -..
 ```
 
-Need just one of the two? Use the focused methods:
+`convertTextToMorseString` returns `null` when there is nothing to encode —
+null, empty, whitespace only, or entirely unmapped characters.
+
+### 📳 Playing it
 
 ```dart
-final code = morse.convertTextToMorseString('SOS');  // "... --- ..."
-final pattern = morse.convertTextToHapticPattern('SOS');
+const haptics = HapticVibration();
+
+await haptics.vibrateText('SOS');           // encode and play
+await haptics.vibrateEvents(events);        // play a sequence you already have
+await haptics.cancel();
 ```
 
-### 🔧 With Custom Timings
+### 🎵 The sequence
+
+`toHapticEvents` returns a list of sealed `HapticEvent`s, so you can render,
+animate, or analyse the sequence rather than guessing what a bare integer meant:
+
+```dart
+for (final event in 'SOS'.toHapticEvents()) {
+  final label = switch (event) {
+    HapticDot()       => 'dot',
+    HapticDash()      => 'dash',
+    HapticSymbolGap() => 'symbol gap',
+    HapticLetterGap() => 'letter gap',
+    HapticWordGap()   => 'word gap',
+  };
+  print('$label — ${event.duration}ms');
+}
+```
+
+**The sequence contract:** it strictly alternates vibration and silence, starts
+and ends with a vibration, and never contains two adjacent gaps.
+
+### 🔌 Raw patterns
+
+To drive `package:vibration` (or any waveform API) yourself:
+
+```dart
+final pattern = 'SOS'.toVibrationPattern(); // [0, 100, 100, 100, ...]
+await Vibration.vibrate(pattern: pattern);
+```
+
+Index `0` is an **off** delay and the list alternates off/on from there — the
+convention shared by Android's `VibrationEffect.createWaveform` and the iOS
+side of `package:vibration`. `toVibrationPattern()` emits the leading `0` for
+you.
+
+### ⛓️ String extensions
+
+```dart
+'SOS'.toMorseString();       // String?
+'SOS'.toHapticEvents();      // List<HapticEvent>
+'SOS'.toMorseModel();        // HapticModel
+'SOS'.toVibrationPattern();  // List<int>
+```
+
+Each takes an optional `HapticMorse` to override the defaults:
+
+```dart
+final fast = HapticMorse.custom(dotDuration: 80, dashDuration: 240);
+'SOS'.toVibrationPattern(fast);
+```
+
+### 🔧 Custom timings and alphabets
 
 ```dart
 final morse = HapticMorse.custom(
@@ -95,98 +130,126 @@ final morse = HapticMorse.custom(
   dashDuration: 240,
   gapSymbolDuration: 80,
   gapLetterDuration: 240,
-  gapWordDuration: 600,
+  gapWordDuration: 560,
 );
 ```
 
-### ⛓️ Extended from String Directly
+`HapticMorse.custom` **validates its arguments** and throws `ArgumentError` if
+a map and its reference disagree in length, a reference repeats a character, a
+pattern is empty or uses characters other than the configured dot and dash, or
+a duration is not positive. Misconfiguration fails at construction instead of
+silently dropping letters.
+
+---
+
+## 🌍 International & emoji support
+
+Text is segmented into **grapheme clusters**, so any character your users can
+type counts as one character — including emoji made of surrogate pairs,
+variation selectors, or zero-width joiners.
 
 ```dart
-final code    = 'HELLO WORLD'.toMorseString();    // String?
-final model   = 'HELLO WORLD'.toMorseMap();       // HapticModel
-final pattern = 'HELLO WORLD'.toHapticPattern();  // List<int>
+final morse = HapticMorse.custom(
+  charMap: ['.-', '-...', '..--', '.-.-'],
+  charReference: 'AB日水',
+);
+print(morse.convertTextToMorseString('AB日水')); // .- -... ..-- .-.-
 ```
 
-Every extension method takes the same optional parameters as
-`HapticMorse.custom`, so you can override any of them inline:
+```dart
+final emoji = HapticMorse.custom(
+  charMap: ['.-', '--'],
+  charReference: '💧🔥',
+);
+print(emoji.convertTextToMorseString('💧🔥')); // .- --
+```
+
+You can even change the symbols the patterns are spelled with:
 
 ```dart
-final pattern = 'SOS'.toHapticPattern(
-  dotDuration: 80,
-  dashDuration: 240,
-  gapWordDuration: 600,
-);
+final binary = HapticMorse.custom(symbolReference: '0', dashReference: '1');
+print(binary.convertTextToMorseString('SOS')); // 000 111 000
 ```
 
 ---
 
-## 📳 Vibrate Module
+## 📚 API Overview
 
-`HapticVibration` wraps [`package:vibration`](https://pub.dev/packages/vibration)
-so you can play a generated pattern:
+### `HapticMorse`
 
-```dart
-const haptics = HapticVibration();
-
-await haptics.vibrate(pattern: 'SOS'.toHapticPattern());
-await haptics.cancel();
-```
-
-> ⚠️ **Known issue (fixed in 2.0.0).** `vibration` treats index `0` of `pattern`
-> as an **off** delay and alternates off/on from there. The patterns produced by
-> this version start with an **on** duration, so dots/dashes and gaps play
-> inverted. Until 2.0.0 lands, prepend a zero yourself:
->
-> ```dart
-> await haptics.vibrate(pattern: [0, ...'SOS'.toHapticPattern()]);
-> ```
->
-> Note this workaround is still imperfect for input containing consecutive
-> spaces. See the changelog for details.
-
-Vibration is supported on **Android and iOS** only.
-
----
-
-
-## 📦 API Overview
-
-### 🧩 `convertTextToMorseString(String?) → String?`
-
-Returns a Morse code string using dots (`.`) and dashes (`-`), separating words with `/`.
-
-### 🎵 `convertTextToHapticPattern(String?) → List<int>`
-
-Returns a list of vibration durations for:
-
-* 🔹 Dot
-* 🔸 Dash
-* ⏱ Symbol/letter/word gaps
-
-### 🔄 `convertTextToMorseMap(String?) → HapticModel`
-
-Returns a `HapticModel` with:
-
-| Field | Type | Description |
+| Member | Returns | Description |
 | --- | --- | --- |
-| `text` | `String` | The original input |
-| `morseCode` | `String` | Dot/dash representation |
-| `hapticDurations` | `List<int>` | Vibration durations (unmodifiable view) |
+| `const HapticMorse()` | — | Standard International Morse Code |
+| `HapticMorse.custom({...})` | — | Custom timings/alphabet; validates and throws |
+| `convertTextToMorseString(String?)` | `String?` | Dots and dashes, words split by `" / "` |
+| `convertTextToHapticEvents(String?)` | `List<HapticEvent>` | The haptic sequence |
+| `convertTextToModel(String?)` | `HapticModel` | All three, tokenized once |
 
-`HapticModel` supports `==` / `hashCode`, `copyWith`, `toJson`, `encode`,
-`fromMap`, and `fromJson`.
+### `HapticEvent`
+
+Sealed: `HapticDot`, `HapticDash`, `HapticSymbolGap`, `HapticLetterGap`,
+`HapticWordGap`. Each has `duration`, `isVibration`, `toJson()`, and value
+equality. On `List<HapticEvent>`: `toVibrationPattern()` and `totalDuration`.
+
+### `HapticModel`
+
+`text`, `morseCode`, `events` (unmodifiable), `totalDuration`,
+`toVibrationPattern()`, `copyWith`, `toJson`, `encode`, `fromMap`, `fromJson`,
+plus `==`/`hashCode`.
+
+### `HapticVibration`
+
+`vibrateText`, `vibrateEvents`, `vibrate`, `cancel`. Android and iOS only.
+
+---
+
+## ⬆️ Migrating from 1.x
+
+**1.x haptic patterns were played inverted.** `package:vibration` treats index
+0 as an off delay, but 1.x emitted a vibration there, so every dot and dash was
+played as silence and every gap as a buzz. Patterns also broke at leading
+spaces, doubled spaces, and trailing unsupported characters. Fixing this
+required changing the output, hence 2.0.0.
+
+| 1.x | 2.0.0 |
+| --- | --- |
+| `convertTextToHapticPattern(text)` | `convertTextToHapticEvents(text)`, or `toVibrationPattern()` for `List<int>` |
+| `convertTextToMorseMap(text)` | `convertTextToModel(text)` |
+| `model.hapticDurations` | `model.events`, or `model.toVibrationPattern()` |
+| `'x'.toMorseMap()` | `'x'.toMorseModel()` |
+| `'x'.toHapticPattern()` | `'x'.toHapticEvents()` / `'x'.toVibrationPattern()` |
+| `'x'.toMorseString(dotDuration: 80, ...)` | `'x'.toMorseString(HapticMorse.custom(dotDuration: 80))` |
+| `HapticMorse(charMap: ..., ...)` | `HapticMorse.custom(charMap: ..., ...)` |
+| `import '...haptic_morse.dart'` for `HapticVibration` | `import '...haptic_morse_vibration.dart'` |
+
+Also note:
+
+- `convertTextToMorseString` now returns `null` (not `''`) when the input holds
+  no mappable characters.
+- `HapticMorse.custom` throws `ArgumentError` on configurations 1.x accepted
+  silently. A `charMap` shorter than its `charReference` is the common one.
+- `package:vibration` is no longer re-exported. Import it directly if you use
+  its API.
+- If you applied the 1.0.6 `[0, ...pattern]` workaround, **remove it** —
+  `toVibrationPattern()` now emits the leading zero itself.
 
 ---
 
 ## 🧪 Test Coverage
 
-✅ **100% line coverage**, verified with `flutter test --coverage`.
-
-Run it yourself:
+✅ **209 of 211 lines (99.1%)**, verified in CI.
 
 ```bash
 flutter test --coverage
 ```
+
+The two uncovered lines are the message of an `assert` guarding an invariant
+that `HapticMorse.custom` makes unreachable — it can only evaluate if the
+validation is bypassed.
+
+The core suite also runs on the plain Dart SDK
+(`dart test --exclude-tags flutter`), which is what keeps `haptic_morse.dart`
+free of Flutter and `dart:ui`.
 
 ---
 
@@ -197,14 +260,14 @@ flutter test --coverage
 * 🧏 Support for the hearing impaired
 * 💬 Secret Morse-coded chat apps
 * 🧠 Educational tools
-* 🌐 **Multi-lingual & emoji Morse messages!**
+* 🌐 Multi-lingual & emoji Morse messages
 
 ---
 
 ## 📚 Resources
 
 * [International Morse Code](https://en.wikipedia.org/wiki/Morse_code)
-* [Vibration API](https://developer.mozilla.org/en-US/docs/Web/API/Vibration_API)
+* [package:vibration](https://pub.dev/packages/vibration)
 
 ---
 

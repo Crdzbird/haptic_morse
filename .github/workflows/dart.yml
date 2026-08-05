@@ -36,5 +36,12 @@ jobs:
       - name: Analyze project source
         run: flutter analyze --fatal-infos
 
+      # Runs the untagged tests on the plain Dart SDK. This is the guard that
+      # keeps package:haptic_morse/haptic_morse.dart free of Flutter and
+      # dart:ui — if anything in the core starts importing them, this step
+      # fails to load while `flutter test` below would still pass.
+      - name: Verify the core library stays pure Dart
+        run: dart test --exclude-tags flutter
+
       - name: Run tests
         run: flutter test --coverage
