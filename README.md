@@ -39,25 +39,27 @@ All wrapped in a single elegant, performant class.
 
 ## 🌍 International & Custom Support
 
-You’re not limited to just English! Add **custom mappings** for other languages, symbols, or even **emoji-based Morse** (yes, that's a thing now).
+You’re not limited to just English! Add **custom mappings** for other languages and symbols.
 
 ```dart
 final morse = HapticMorse.custom(
-  charMap: ['.-', '-...', '☀️-', '💧💧'], // Your custom Morse patterns
+  charMap: ['.-', '-...', '..--', '.-.-'], // Your custom Morse patterns
   charReference: 'AB日水', // Must match the map's order
-  numericMap: ['...', '...-', '💎', '🌙'],
+  numericMap: ['-----', '.----', '..---', '...--'],
   numericReference: '0123', // Also in order
 );
+
+final output = morse.convertTextToMorseString('AB日水');
+print(output); // .- -... ..-- .-.-
 ```
 
-Now this works:
-
-```dart
-final output = morse.convertTextToMorseString("AB日水");
-print(output); // .- -... ☀️- 💧💧
-```
-
-🎉 Boom — custom Morse for **Japanese Kanji, emoji, or anything** your heart desires.
+> **Character support:** references are matched by UTF-16 code unit, so every
+> character in `charReference` / `numericReference` must be a single code unit.
+> Most scripts qualify — including Japanese Kanji such as `日水` — but characters
+> outside the Basic Multilingual Plane (most emoji, e.g. `💧`) are surrogate
+> pairs and will **not** match correctly. Emoji in `charMap` values are likewise
+> read as several symbols rather than one. Full rune support is planned for
+> 2.0.0.
 
 ---
 
@@ -65,14 +67,24 @@ print(output); // .- -... ☀️- 💧💧
 
 ### ✅ Default Usage
 
+`convertTextToMorseMap` returns a [`HapticModel`](#-api-overview) — a value type
+with `==`, `hashCode`, `copyWith`, and JSON support.
+
 ```dart
 final morse = HapticMorse();
 
-final text = "HELLO WORLD";
-final result = morse.convertTextToMorseMap(text);
+final result = morse.convertTextToMorseMap('HELLO WORLD');
 
-print(result['morseString']); // ".... . .-.. .-.. --- / .-- --- .-. .-.. -.."
-print(result['hapticDurations']); // [100, 100, 100, 300, ...]
+print(result.text);            // "HELLO WORLD"
+print(result.morseCode);       // ".... . .-.. .-.. --- / .-- --- .-. .-.. -.."
+print(result.hapticDurations); // [100, 100, 100, 100, 100, 100, 100, 300, ...]
+```
+
+Need just one of the two? Use the focused methods:
+
+```dart
+final code = morse.convertTextToMorseString('SOS');  // "... --- ..."
+final pattern = morse.convertTextToHapticPattern('SOS');
 ```
 
 ### 🔧 With Custom Timings
@@ -90,49 +102,50 @@ final morse = HapticMorse.custom(
 ### ⛓️ Extended from String Directly
 
 ```dart
-final morse = 'HELLO WORLD'.toMorseString({
-  List<String>? charMap,
-  String? charReference,
-  List<String>? numericMap,
-  String? numericReference,
-  int? dotDuration,
-  int? dashDuration,
-  int? gapSymbolDuration,
-  int? gapLetterDuration,
-  int? gapWordDuration,
-  String? symbolReference,
-});
-final morse2 = 'HELLO WORLD'.toMorseMap({
-  List<String>? charMap,
-  String? charReference,
-  List<String>? numericMap,
-  String? numericReference,
-  int? dotDuration,
-  int? dashDuration,
-  int? gapSymbolDuration,
-  int? gapLetterDuration,
-  int? gapWordDuration,
-  String? symbolReference,
-});
-final morse3 = 'HELLO WORLD'.toHapticPattern({
-  List<String>? charMap,
-  String? charReference,
-  List<String>? numericMap,
-  String? numericReference,
-  int? dotDuration,
-  int? dashDuration,
-  int? gapSymbolDuration,
-  int? gapLetterDuration,
-  int? gapWordDuration,
-  String? symbolReference,
-});
+final code    = 'HELLO WORLD'.toMorseString();    // String?
+final model   = 'HELLO WORLD'.toMorseMap();       // HapticModel
+final pattern = 'HELLO WORLD'.toHapticPattern();  // List<int>
+```
+
+Every extension method takes the same optional parameters as
+`HapticMorse.custom`, so you can override any of them inline:
+
+```dart
+final pattern = 'SOS'.toHapticPattern(
+  dotDuration: 80,
+  dashDuration: 240,
+  gapWordDuration: 600,
+);
 ```
 
 ---
 
-## Vibrate Module
+## 📳 Vibrate Module
 
-Call `HapticVibration` to integrate vibration functionality.
+`HapticVibration` wraps [`package:vibration`](https://pub.dev/packages/vibration)
+so you can play a generated pattern:
+
+```dart
+const haptics = HapticVibration();
+
+await haptics.vibrate(pattern: 'SOS'.toHapticPattern());
+await haptics.cancel();
+```
+
+> ⚠️ **Known issue (fixed in 2.0.0).** `vibration` treats index `0` of `pattern`
+> as an **off** delay and alternates off/on from there. The patterns produced by
+> this version start with an **on** duration, so dots/dashes and gaps play
+> inverted. Until 2.0.0 lands, prepend a zero yourself:
+>
+> ```dart
+> await haptics.vibrate(pattern: [0, ...'SOS'.toHapticPattern()]);
+> ```
+>
+> Note this workaround is still imperfect for input containing consecutive
+> spaces. See the changelog for details.
+
+Vibration is supported on **Android and iOS** only.
+
 ---
 
 
@@ -150,21 +163,30 @@ Returns a list of vibration durations for:
 * 🔸 Dash
 * ⏱ Symbol/letter/word gaps
 
-### 🔄 `convertTextToMorseMap(String?) → Map<String, dynamic>`
+### 🔄 `convertTextToMorseMap(String?) → HapticModel`
 
-Returns a rich object with:
+Returns a `HapticModel` with:
 
-* `morseString`
-* `hapticDurations`
-* `hapticCount`
+| Field | Type | Description |
+| --- | --- | --- |
+| `text` | `String` | The original input |
+| `morseCode` | `String` | Dot/dash representation |
+| `hapticDurations` | `List<int>` | Vibration durations (unmodifiable view) |
+
+`HapticModel` supports `==` / `hashCode`, `copyWith`, `toJson`, `encode`,
+`fromMap`, and `fromJson`.
 
 ---
 
 ## 🧪 Test Coverage
 
-✅ **100% Test Coverage**
-This library is thoroughly tested — every line, every case, every buzz! 🧪
-You're in safe, vibrating hands. 💯
+✅ **100% line coverage**, verified with `flutter test --coverage`.
+
+Run it yourself:
+
+```bash
+flutter test --coverage
+```
 
 ---
 

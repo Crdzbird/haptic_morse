@@ -3,8 +3,10 @@
 .packages
 .pub-cache/
 build/
-# If you use coverage
-# coverage/
+# Coverage output from `flutter test --coverage`
+coverage/
+# Generated dartdoc output; pub.dev builds API docs itself
+doc/api/
 
 # IDEs and editors
 .idea/

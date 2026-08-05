@@ -131,30 +131,33 @@ final class HapticMorse {
   final String _numericReference; // Reference string for digits
   final String _symbolReference; // Reference for dot symbol
 
-  /// Regular expression to match numeric characters based on the numeric reference.
-  ///
-  /// This regex is used to identify if a character is a digit based on the provided numeric reference.
-  /// The regex is constructed to match any character in the numeric reference string.
-  /// For example, if the numeric reference is "0123456789", the regex will match any of these digits.
-  /// The regex is case-insensitive.
-  RegExp get _intRegex =>
-      RegExp('^(${_numericReference.toUpperCase().split('').join('|')})\$');
-
   /// Finds the index of a character in the appropriate reference map.
   ///
   /// Returns a tuple with:
-  /// - Type: String for characters, int for numbers
+  /// - isInt: `true` when matched against [_numericReference], `false` when
+  ///   matched against [_charReference]
   /// - Index: Position in the corresponding Morse code map
+  ///
+  /// The numeric reference is consulted first, so an entry appearing in both
+  /// references resolves to the numeric map. Lookups are case-insensitive:
+  /// the input is upper-cased and compared against the references as given.
   ///
   /// Returns null if the character is not found in any reference map.
   (bool isInt, int)? _findCharacterIndex(String character) {
     final char = character.toUpperCase();
-    if (_intRegex.hasMatch(character)) {
-      // Try to find in numeric reference map
-      final numIndex = _numericReference.indexOf(char);
-      if (numIndex >= 0 && numIndex < _numericMap.length) {
-        return (true, numIndex);
-      }
+
+    // Try to find in numeric reference map.
+    //
+    // This previously went through a RegExp built by interpolating
+    // _numericReference, which (a) recompiled the pattern on every character,
+    // (b) threw a FormatException when the reference held a regex metacharacter
+    // such as '(', and (c) tested the raw character against an upper-cased
+    // pattern while looking up the upper-cased character. A direct indexOf is
+    // equivalent for the default digit reference and consistent with how the
+    // alphabet reference below is already resolved.
+    final numIndex = _numericReference.indexOf(char);
+    if (numIndex >= 0 && numIndex < _numericMap.length) {
+      return (true, numIndex);
     }
 
     // Try to find in alphabet reference map
@@ -167,13 +170,12 @@ final class HapticMorse {
     return null;
   }
 
-  /// Converts text to a sequence of haptic durations.
+  /// Converts text to a sequence of haptic durations in milliseconds.
   ///
-  /// Returns a list of integers representing durations in milliseconds,
-  /// where positive values indicate vibration duration and negative values
-  /// would indicate pause duration (though all gaps are positive here).
+  /// The list interleaves symbol durations (dot/dash) with gap durations,
+  /// starting with a symbol. Unsupported characters are skipped.
   ///
-  /// Returns null if input is null or empty.
+  /// Returns an empty list if input is null or empty.
   List<int> convertTextToHapticPattern(String? input) {
     if (input == null || input.isEmpty) return [];
 
@@ -265,10 +267,12 @@ final class HapticMorse {
 
   /// Converts text to both haptic pattern and Morse code string.
   ///
-  /// Returns a [HapticModel] containing:
-  /// - 'hapticDurations': List of durations for haptic feedback
-  /// - 'hapticCount': Number of elements in the haptic pattern
-  /// - 'morseString': String representation of Morse code
+  /// Returns a [HapticModel] whose fields are:
+  /// - [HapticModel.text]: the original input
+  /// - [HapticModel.morseCode]: the dot/dash representation
+  /// - [HapticModel.hapticDurations]: the vibration durations
+  ///
+  /// Returns a default-constructed [HapticModel] if input is null or empty.
   HapticModel convertTextToMorseMap(String? input) {
     if (input == null || input.isEmpty) return HapticModel();
     final hapticDurations = convertTextToHapticPattern(input);
