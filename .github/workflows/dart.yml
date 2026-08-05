@@ -30,6 +30,15 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # example_flutter is a separate package. Both `dart format .` and
+      # `flutter analyze` descend into it from the repository root, and both
+      # behave differently when its analysis_options include cannot resolve —
+      # the formatter reported a file as unformatted here while the identical
+      # command passed locally, purely because the deps were missing.
+      - name: Install example app dependencies
+        working-directory: example_flutter
+        run: flutter pub get
+
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 
@@ -45,3 +54,7 @@ jobs:
 
       - name: Run tests
         run: flutter test --coverage
+
+      - name: Run example app tests
+        working-directory: example_flutter
+        run: flutter test
