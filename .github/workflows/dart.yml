@@ -16,14 +16,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # Third-party actions are pinned to a commit SHA rather than a moving
+      # tag, so a retagged release cannot change what runs here. Update these
+      # deliberately: resolve the tag with
+      #   gh api repos/<owner>/<repo>/git/ref/tags/<tag> --jq .object.sha
+      # and bump the SHA and the trailing comment together.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       # The package depends on flutter_test and on package:vibration, so the
-      # Flutter SDK is required. The previous dart-lang/setup-dart + `dart test`
-      # combination could not load any test file in test/.
-      # VERIFY: pin this to a commit SHA the way the old setup-dart step was,
-      # once you have picked the release you want.
-      - uses: subosito/flutter-action@v2
+      # Flutter SDK is required. The previous dart-lang/setup-dart with
+      # `dart test` could not load any test file in test/.
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
 
