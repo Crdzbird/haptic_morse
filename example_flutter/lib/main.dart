@@ -36,16 +36,35 @@ class _MyHomePageState extends State<MyHomePage> {
   final _controller = TextEditingController(text: 'HOLA');
   HapticModel _message = const HapticModel();
 
+  /// Null until the capability check completes.
+  bool? _canPlayPatterns;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkCapabilities();
+  }
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
+  Future<void> _checkCapabilities() async {
+    // A device with no motor, or one that cannot play a custom waveform,
+    // cannot reproduce Morse timing. The message must stay readable there, so
+    // the UI falls back to the printed code instead of buzzing meaninglessly.
+    final supported = await _haptics.hasCustomVibrationsSupport();
+    if (mounted) setState(() => _canPlayPatterns = supported);
+  }
+
   Future<void> _play() async {
     final message = _controller.text.toMorseModel();
     setState(() => _message = message);
-    await _haptics.vibrateEvents(message.events);
+    if (_canPlayPatterns ?? false) {
+      await _haptics.vibrateEvents(message.events);
+    }
   }
 
   @override
@@ -81,7 +100,12 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 24),
             Text(
               '${_message.events.length} events · '
-              '${_message.totalDuration}ms',
+              '${_message.totalDuration}ms · '
+              '${switch (_canPlayPatterns) {
+                null => 'checking device…',
+                true => 'haptics available',
+                false => 'haptics unavailable — showing code only',
+              }}',
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 8),

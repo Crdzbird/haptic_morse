@@ -66,10 +66,27 @@ void main() {
     print('rejected: ${e.message}');
   }
 
-  // 8. To actually vibrate (Android/iOS only):
+  // 8. Morse timing is defined in units, not milliseconds. The defaults are
+  //    the ITU-R M.1677-1 ratios of 1/3/1/3/7, which put the standard word
+  //    "PARIS" at exactly 50 units.
+  const unit = 100; // the default dot duration
+  final paris = 'PARIS'.toMorseModel().totalDuration;
+  final twice = 'PARIS PARIS'.toMorseModel().totalDuration;
+  final wordSpace = twice - 2 * paris;
+  print('PARIS + space = ${(paris + wordSpace) ~/ unit} units'); // 50
+  print('speed         = ${1200 ~/ unit} WPM'); // 12
+
+  // 9. To actually vibrate (Android/iOS only):
   //
   //   import 'package:haptic_morse/haptic_morse_vibration.dart';
   //
   //   const haptics = HapticVibration();
-  //   await haptics.vibrateText('SOS');
+  //
+  //   // Check first: a haptic-only message is unreadable on a device that
+  //   // cannot reproduce the timing. Fall back to the printed Morse.
+  //   if (await haptics.hasCustomVibrationsSupport()) {
+  //     await haptics.vibrateText('SOS');
+  //   } else {
+  //     print('SOS'.toMorseString());
+  //   }
 }

@@ -173,6 +173,78 @@ print(binary.convertTextToMorseString('SOS')); // 000 111 000
 
 ---
 
+## ♿ Accessibility & conformance
+
+### Morse timing is standards-conformant
+
+The defaults implement the ITU-R M.1677-1 unit ratios, and the test suite
+checks them rather than trusting them:
+
+| Element | Units | Default |
+| --- | --- | --- |
+| dot (dit) | 1 | 100ms |
+| dash (dah) | 3 | 300ms |
+| gap between symbols | 1 | 100ms |
+| gap between letters | 3 | 300ms |
+| gap between words | 7 | 700ms |
+
+The strongest single check is the standard word **PARIS**, which is defined to
+be exactly 50 units — if that holds, every ratio is simultaneously correct.
+`'PARIS'.toMorseModel()` plus one word space measures 5000ms at the defaults,
+giving **12 WPM**, matching the standard `WPM = 1200 / dotDurationMs`.
+
+To pick a speed, set the dot duration and scale the rest:
+
+```dart
+const wpm = 20;
+const unit = 1200 ~/ wpm; // 60ms
+final morse = HapticMorse.custom(
+  dotDuration: unit,
+  dashDuration: 3 * unit,
+  gapSymbolDuration: unit,
+  gapLetterDuration: 3 * unit,
+  gapWordDuration: 7 * unit,
+);
+```
+
+### Always provide a non-haptic path
+
+A haptic-only message is unreadable on a device that cannot reproduce the
+timing. Check before you rely on it:
+
+```dart
+if (await haptics.hasCustomVibrationsSupport()) {
+  await haptics.vibrateText(message);
+} else {
+  showText(message.toMorseString()); // or the plain text
+}
+```
+
+`hasCustomVibrationsSupport()` is the check that matters for Morse — it asks
+the platform directly. `hasVibrator()` resolves from device info instead and
+returns `false` on **emulators and simulators**, so don't gate development
+builds on it.
+
+### Known limitations
+
+- **12 WPM is fast for a beginner reading through skin.** Consider a slower
+  unit, or Farnsworth-style timing (standard characters, stretched gaps), which
+  you can build today by passing large gap durations with small symbol
+  durations.
+- **Very short units may not be perceptible.** Durations are validated as
+  positive, not as perceptible; eccentric-rotating-mass motors need tens of
+  milliseconds to spin up, so a dot below roughly 20–30ms may not be felt at
+  all on some hardware. Test on target devices.
+- **Every vibration is sent with Android's `USAGE_ALARM`.** That is hardcoded
+  in `package:vibration`, not chosen here, and it means playback is categorized
+  as an alarm rather than as accessibility or notification output. If that
+  matters for your app, drive the platform APIs directly with
+  `toVibrationPattern()`.
+- **Punctuation and accented letters are not in the default table** (A-Z and
+  0-9 only). Supply them via `HapticMorse.custom`.
+
+---
+
 ## 📚 API Overview
 
 ### `HapticMorse`
@@ -199,7 +271,9 @@ plus `==`/`hashCode`.
 
 ### `HapticVibration`
 
-`vibrateText`, `vibrateEvents`, `vibrate`, `cancel`. Android and iOS only.
+`vibrateText`, `vibrateEvents`, `vibrate`, `cancel`, plus the capability checks
+`hasCustomVibrationsSupport`, `hasVibrator`, and `hasAmplitudeControl`.
+Android and iOS only.
 
 ---
 
@@ -237,7 +311,7 @@ Also note:
 
 ## 🧪 Test Coverage
 
-✅ **209 of 211 lines (99.1%)**, verified in CI.
+✅ **213 of 215 lines (99.1%)**, verified in CI.
 
 ```bash
 flutter test --coverage

@@ -41,6 +41,14 @@ every renamed member.
   unambiguous and can be validated.
 - `String.toVibrationPattern()`.
 - Argument validation on `HapticMorse.custom` — see *Changed*.
+- `HapticVibration.hasVibrator`, `.hasCustomVibrationsSupport`, and
+  `.hasAmplitudeControl`, so an app can fall back to showing the Morse code on
+  a device that cannot reproduce the timing. Nothing in 1.x exposed a
+  capability check, so a haptic-only message was simply unreadable there.
+- A conformance suite checking the output against ITU-R M.1677-1: the
+  1/3/1/3/7 unit ratios, the standard `PARIS` word measuring exactly 50 units,
+  the `1200/dot` words-per-minute formula, the full ITU code table, and an
+  encode/decode round trip using an independent table.
 
 ### Changed
 

@@ -21,6 +21,38 @@ final class HapticVibration {
   /// Creates a vibration controller.
   const HapticVibration();
 
+  /// Whether the device has a vibration motor at all.
+  ///
+  /// Check this before offering haptic output as a user-facing feature, and
+  /// provide a visual or audible alternative when it is `false` — a haptic-only
+  /// message is unreadable on a device that cannot vibrate.
+  ///
+  /// **Returns `false` on emulators, simulators, and any non-mobile host.**
+  /// `package:vibration` resolves this from the device info rather than the
+  /// motor, and treats every non-physical device as having none. Do not gate
+  /// development builds on it or you will only ever see the fallback path.
+  /// Prefer [hasCustomVibrationsSupport] for deciding whether Morse can play.
+  Future<bool> hasVibrator() => Vibration.hasVibrator();
+
+  /// Whether the device can play a custom waveform.
+  ///
+  /// This is the check that matters for Morse: when it is `false` the motor can
+  /// only be switched on for a fixed duration, so the timing that carries the
+  /// message cannot be reproduced. Fall back to showing
+  /// [HapticModel.morseCode] rather than playing something illegible.
+  ///
+  /// Unlike [hasVibrator] this asks the platform directly, so it is meaningful
+  /// on emulators. It may return `true` on a device with no motor.
+  Future<bool> hasCustomVibrationsSupport() =>
+      Vibration.hasCustomVibrationsSupport();
+
+  /// Whether the device can vary vibration strength.
+  ///
+  /// Only relevant if you pass a non-default `amplitude`; timing-based Morse
+  /// does not need it. Carries the same non-physical-device caveat as
+  /// [hasVibrator].
+  Future<bool> hasAmplitudeControl() => Vibration.hasAmplitudeControl();
+
   /// Converts [text] to Morse and plays it.
   ///
   /// Pass [morse] to override the timings or alphabet. Returns without

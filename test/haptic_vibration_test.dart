@@ -108,6 +108,40 @@ void main() {
     });
   });
 
+  group('capability checks', () {
+    setUp(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        log.add(methodCall);
+        return true;
+      });
+    });
+
+    test('hasCustomVibrationsSupport asks the platform directly', () async {
+      expect(
+        await const HapticVibration().hasCustomVibrationsSupport(),
+        isTrue,
+      );
+      expect(log.single.method, 'hasCustomVibrationsSupport');
+    });
+
+    test('hasVibrator resolves without touching the vibration channel',
+        () async {
+      // package:vibration answers this from device_info_plus and a
+      // Platform.isAndroid/isIOS check, not from the motor, so on this host it
+      // is false no matter what the channel would say. Asserting `isFalse`
+      // here would bake in host behaviour; asserting the absence of a channel
+      // call is what is actually true and portable.
+      expect(await const HapticVibration().hasVibrator(), isA<bool>());
+      expect(log.where((c) => c.method == 'hasVibrator'), isEmpty);
+    });
+
+    test('hasAmplitudeControl resolves without throwing', () async {
+      // Same device-info path as hasVibrator on a non-physical device.
+      expect(await const HapticVibration().hasAmplitudeControl(), isA<bool>());
+    });
+  });
+
   group('cancel', () {
     test('forwards to the platform', () async {
       await const HapticVibration().cancel();
