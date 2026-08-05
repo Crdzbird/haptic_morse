@@ -366,6 +366,46 @@ Also note:
 
 ---
 
+## 🔬 Proof it works
+
+The [example](example/haptic_morse_example.dart) is self-verifying, runs on
+plain Dart with no device, and executes in CI on every push:
+
+```bash
+dart run example/haptic_morse_example.dart
+```
+
+It doesn't just print values — it takes the raw `List<int>` handed to the
+platform and reconstructs the message from it using **only** the documented
+off/on convention, with no reference to this package's types:
+
+```
+   text            : "SOS"
+   pattern         : [0, 100, 100, 100, 100, 100, 300, 300, 100, ...]
+
+   █·█·█···███·███·███···█·█·█
+
+   recovered morse : ... --- ...
+   recovered text  : "SOS"          ✓
+```
+
+And it demonstrates the 1.x bug rather than just describing it — the same
+durations without the leading `0` decode to a different message entirely:
+
+```
+   1.x pattern     : [100, 100, 100, 100, 100, 300, 300, 100, ...]
+
+   ·█·█·███···█···█···███·█·█·
+
+   plays as text   : "UEED"         ✗  expected "SOS"
+```
+
+It also checks the ITU timing ratios, the sequence contract at seven awkward
+edges, and round trips over punctuation and digits — 8 assertions in total,
+and the program throws if any fails.
+
+---
+
 ## 🧪 Test Coverage
 
 ✅ **100% line coverage (290/290)**, enforced in CI — the build fails below it.

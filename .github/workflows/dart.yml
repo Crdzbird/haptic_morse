@@ -83,6 +83,14 @@ jobs:
             /^DA:/ { split($2, d, ","); if (d[2] == 0) print file ":" d[1] }
           ' coverage/lcov.info
 
+      # The example is self-verifying: it reconstructs the message from the raw
+      # vibration pattern using only the platform's off/on convention and
+      # throws if anything fails to match. Running it here keeps the claims in
+      # the README honest, and doubles as proof the core is usable from plain
+      # Dart with no Flutter and no device.
+      - name: Run the self-verifying example
+        run: dart run example/haptic_morse_example.dart
+
       - name: Run example app tests
         working-directory: example_flutter
         run: flutter test
