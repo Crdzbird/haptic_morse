@@ -120,6 +120,11 @@ every renamed member.
   against 3.2.0's Android and (newly Swift-Package-Manager-based) iOS sources
   before the bump; index 0 is still an off delay.
 - Added `meta` as a dependency; the value types are now `@immutable`.
+- Line coverage is 100% and CI fails below it. The two lines previously
+  uncovered were an assert's interpolated failure message, which is executable
+  code that only runs when the assert fails and so can never be covered;
+  making the message constant reaches 100% without excluding a line or
+  dropping the check.
 
 # 1.0.6
 

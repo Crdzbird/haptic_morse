@@ -6,7 +6,7 @@
 
 *Your Words, in Vibes & Dashes*
 
-[![coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)](#-test-coverage)
+[![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](#-test-coverage)
 [![Dart](https://img.shields.io/badge/Dart-Stable-blue.svg)](https://dart.dev)
 [![Vibration-Powered](https://img.shields.io/badge/Powered_By-Haptics-ff69b4.svg)](#-vibrate-module)
 
@@ -368,15 +368,16 @@ Also note:
 
 ## 🧪 Test Coverage
 
-✅ **290 of 292 lines (99.3%)**, verified in CI.
+✅ **100% line coverage (290/290)**, enforced in CI — the build fails below it.
 
 ```bash
 flutter test --coverage
 ```
 
-The two uncovered lines are the message of an `assert` guarding an invariant
-that `HapticMorse.custom` makes unreachable — it can only evaluate if the
-validation is bypassed.
+No lines are excluded and no checks were removed to get there. One subtlety
+worth knowing if you add an `assert`: an interpolated failure message is
+itself executable code that only runs when the assert fails, so it can never
+be covered. Keep such messages constant.
 
 The core suite also runs on the plain Dart SDK
 (`dart test --exclude-tags flutter`), which is what keeps `haptic_morse.dart`

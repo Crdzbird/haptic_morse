@@ -55,6 +55,34 @@ jobs:
       - name: Run tests
         run: flutter test --coverage
 
+      # The bar for this package is 100%, so anything less fails the build
+      # rather than quietly drifting. Note that an assert message written with
+      # string interpolation is executable code that only runs on failure, and
+      # therefore can never be covered — keep such messages constant.
+      - name: Enforce 100% line coverage
+        run: |
+          awk -F: '
+            /^LF:/ { total += $2 }
+            /^LH:/ { hit += $2 }
+            END {
+              if (total == 0) { print "No coverage data found."; exit 1 }
+              pct = hit / total * 100
+              printf "Coverage: %d/%d (%.2f%%)\n", hit, total, pct
+              if (hit != total) {
+                print "::error::Line coverage must be 100%."
+                exit 1
+              }
+            }
+          ' coverage/lcov.info
+
+      - name: Report uncovered lines
+        if: failure()
+        run: |
+          awk -F: '
+            /^SF:/ { file = $2 }
+            /^DA:/ { split($2, d, ","); if (d[2] == 0) print file ":" d[1] }
+          ' coverage/lcov.info
+
       - name: Run example app tests
         working-directory: example_flutter
         run: flutter test
