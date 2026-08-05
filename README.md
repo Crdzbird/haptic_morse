@@ -122,6 +122,42 @@ final fast = HapticMorse.custom(dotDuration: 80, dashDuration: 240);
 'SOS'.toVibrationPattern(fast);
 ```
 
+### 🔓 Decoding
+
+Morse goes back to text, from either representation:
+
+```dart
+morse.decodeMorseString('... --- ...');              // "SOS"
+morse.decodeEvents('HELLO'.toHapticEvents());        // "HELLO"
+```
+
+`decodeEvents` needs no threshold guessing — the events are already typed, so
+symbol and word boundaries are exact. Decoded text is upper-case, because Morse
+does not carry case. Unrecognized patterns are skipped, mirroring how encoding
+skips unmapped characters.
+
+### ⏱️ Speed in words per minute
+
+```dart
+final morse = HapticMorse.atSpeed(wordsPerMinute: 20);
+```
+
+One unit is `1200 / wordsPerMinute` milliseconds, the standard definition.
+
+For **Farnsworth timing** — crisp characters delivered slowly, the standard way
+to make Morse learnable, and the one that matters most for reading through skin
+— give an overall speed as well:
+
+```dart
+final morse = HapticMorse.atSpeed(
+  wordsPerMinute: 20,          // each character is sent at 20 WPM
+  effectiveWordsPerMinute: 8,  // the message overall reads at 8 WPM
+);
+```
+
+Symbols keep their 20 WPM shape while the letter and word gaps stretch, so the
+rhythm of each character stays recognizable instead of turning into slow mush.
+
 ### 🔧 Custom timings and alphabets
 
 ```dart
@@ -143,6 +179,19 @@ silently dropping letters.
 ---
 
 ## 🌍 International & emoji support
+
+The default table covers **A-Z, 0-9, and punctuation** — `. , : ? ' - / ( ) "
+= + @` from ITU-R M.1677-1, plus the conventional `& ! ; _ $`.
+
+Accented letters are opt-in, since they are regional convention rather than
+ITU-normative:
+
+```dart
+final morse = HapticMorse.custom(
+  additionalSymbols: HapticMorse.accentedLetters, // À Å Ä Ç È É Ñ Ö Ü
+);
+print(morse.convertTextToMorseString('MAÑANA')); // -- .- --.-- .- -. .-
+```
 
 Text is segmented into **grapheme clusters**, so any character your users can
 type counts as one character — including emoji made of surrogate pairs,
@@ -193,19 +242,15 @@ be exactly 50 units — if that holds, every ratio is simultaneously correct.
 `'PARIS'.toMorseModel()` plus one word space measures 5000ms at the defaults,
 giving **12 WPM**, matching the standard `WPM = 1200 / dotDurationMs`.
 
-To pick a speed, set the dot duration and scale the rest:
+Use `HapticMorse.atSpeed` rather than scaling the five durations by hand:
 
 ```dart
-const wpm = 20;
-const unit = 1200 ~/ wpm; // 60ms
-final morse = HapticMorse.custom(
-  dotDuration: unit,
-  dashDuration: 3 * unit,
-  gapSymbolDuration: unit,
-  gapLetterDuration: 3 * unit,
-  gapWordDuration: 7 * unit,
-);
+final morse = HapticMorse.atSpeed(wordsPerMinute: 20);
 ```
+
+The conformance suite measures the resulting speed at 5, 12, 13, 20, 25, and
+40 WPM, and measures Farnsworth output at five character/overall pairs, so the
+timing model is checked rather than assumed.
 
 ### Always provide a non-haptic path
 
@@ -227,10 +272,10 @@ builds on it.
 
 ### Known limitations
 
-- **12 WPM is fast for a beginner reading through skin.** Consider a slower
-  unit, or Farnsworth-style timing (standard characters, stretched gaps), which
-  you can build today by passing large gap durations with small symbol
-  durations.
+- **12 WPM is fast for a beginner reading through skin.** Use
+  `HapticMorse.atSpeed` with an `effectiveWordsPerMinute` below the character
+  speed — Farnsworth timing keeps each character's rhythm recognizable while
+  slowing the message down.
 - **Very short units may not be perceptible.** Durations are validated as
   positive, not as perceptible; eccentric-rotating-mass motors need tens of
   milliseconds to spin up, so a dot below roughly 20–30ms may not be felt at
@@ -240,8 +285,10 @@ builds on it.
   as an alarm rather than as accessibility or notification output. If that
   matters for your app, drive the platform APIs directly with
   `toVibrationPattern()`.
-- **Punctuation and accented letters are not in the default table** (A-Z and
-  0-9 only). Supply them via `HapticMorse.custom`.
+- **Named prosigns such as `<SK>` and `<KN>` are not supported.** Table keys
+  are single characters, so multi-character tokens cannot be expressed. The
+  prosigns that have punctuation equivalents (`+` for AR, `=` for BT, `@` for
+  AC, `&` for AS) are in the default table.
 
 ---
 
@@ -251,11 +298,16 @@ builds on it.
 
 | Member | Returns | Description |
 | --- | --- | --- |
-| `const HapticMorse()` | — | Standard International Morse Code |
+| `const HapticMorse()` | — | A-Z, 0-9, punctuation; 12 WPM |
+| `HapticMorse.atSpeed({...})` | — | Timing in WPM, with optional Farnsworth |
 | `HapticMorse.custom({...})` | — | Custom timings/alphabet; validates and throws |
 | `convertTextToMorseString(String?)` | `String?` | Dots and dashes, words split by `" / "` |
 | `convertTextToHapticEvents(String?)` | `List<HapticEvent>` | The haptic sequence |
 | `convertTextToModel(String?)` | `HapticModel` | All three, tokenized once |
+| `decodeMorseString(String?)` | `String?` | Morse back to upper-case text |
+| `decodeEvents(List<HapticEvent>)` | `String?` | A sequence back to text |
+| `supportedCharacters` | `Iterable<String>` | Everything this encoder can represent |
+| `HapticMorse.accentedLetters` | `Map<String, String>` | Opt-in À Å Ä Ç È É Ñ Ö Ü |
 
 ### `HapticEvent`
 
@@ -311,7 +363,7 @@ Also note:
 
 ## 🧪 Test Coverage
 
-✅ **213 of 215 lines (99.1%)**, verified in CI.
+✅ **283 of 285 lines (99.3%)**, verified in CI.
 
 ```bash
 flutter test --coverage

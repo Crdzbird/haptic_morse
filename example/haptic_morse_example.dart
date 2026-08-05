@@ -66,15 +66,34 @@ void main() {
     print('rejected: ${e.message}');
   }
 
-  // 8. Morse timing is defined in units, not milliseconds. The defaults are
-  //    the ITU-R M.1677-1 ratios of 1/3/1/3/7, which put the standard word
-  //    "PARIS" at exactly 50 units.
-  const unit = 100; // the default dot duration
-  final paris = 'PARIS'.toMorseModel().totalDuration;
-  final twice = 'PARIS PARIS'.toMorseModel().totalDuration;
-  final wordSpace = twice - 2 * paris;
-  print('PARIS + space = ${(paris + wordSpace) ~/ unit} units'); // 50
-  print('speed         = ${1200 ~/ unit} WPM'); // 12
+  // 8. Punctuation is part of the standard table.
+  print('HELLO, WORLD!'.toMorseString());
+
+  // 9. Accented letters are opt-in.
+  final accented = HapticMorse.custom(
+    additionalSymbols: HapticMorse.accentedLetters,
+  );
+  print(accented.convertTextToMorseString('MAÑANA')); // ends with --.-- for Ñ
+
+  // 10. Decoding, from either representation.
+  print(morse.decodeMorseString('... --- ...')); // SOS
+  print(morse.decodeEvents('HELLO, WORLD!'.toHapticEvents()));
+
+  // 11. Speed in words per minute. One unit is 1200/WPM milliseconds, so the
+  //     standard word "PARIS" plus a word space measures exactly 50 units.
+  final fast20 = HapticMorse.atSpeed(wordsPerMinute: 20);
+  print(
+      '20 WPM dot = ${fast20.convertTextToHapticEvents('E').single.duration}ms');
+
+  // 12. Farnsworth timing: crisp characters, stretched gaps. This is how you
+  //     make Morse readable through skin without distorting each character.
+  final learner = HapticMorse.atSpeed(
+    wordsPerMinute: 20, // character speed
+    effectiveWordsPerMinute: 8, // overall speed
+  );
+  final plainGap = fast20.convertTextToHapticEvents('EE')[1].duration;
+  final learnerGap = learner.convertTextToHapticEvents('EE')[1].duration;
+  print('letter gap: ${plainGap}ms standard vs ${learnerGap}ms Farnsworth');
 
   // 9. To actually vibrate (Android/iOS only):
   //

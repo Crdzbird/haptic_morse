@@ -102,7 +102,7 @@ void main() {
     });
 
     test('never touches the motor when nothing is encodable', () async {
-      await const HapticVibration().vibrateText('!!!');
+      await const HapticVibration().vibrateText('🙂🙂🙂');
 
       expect(log, isEmpty);
     });

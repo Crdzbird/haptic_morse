@@ -64,8 +64,8 @@ void main() {
     });
 
     test('skips unsupported characters', () {
-      expect(morse.convertTextToMorseString('A!B'), '.- -...');
-      expect(morse.convertTextToMorseString('A@B'), '.- -...');
+      expect(morse.convertTextToMorseString('A🙂B'), '.- -...');
+      expect(morse.convertTextToMorseString('A日B'), '.- -...');
     });
 
     test('collapses whitespace runs into a single word separator', () {
@@ -75,14 +75,14 @@ void main() {
     });
 
     test('drops words made entirely of unsupported characters', () {
-      expect(morse.convertTextToMorseString('A !! B'), '.- / -...');
+      expect(morse.convertTextToMorseString('A 🙂🙂 B'), '.- / -...');
     });
 
     test('returns null when there is nothing to encode', () {
       expect(morse.convertTextToMorseString(null), isNull);
       expect(morse.convertTextToMorseString(''), isNull);
       expect(morse.convertTextToMorseString('   '), isNull);
-      expect(morse.convertTextToMorseString('!!!'), isNull);
+      expect(morse.convertTextToMorseString('🙂🙂🙂'), isNull);
     });
   });
 
@@ -117,7 +117,7 @@ void main() {
       expect(morse.convertTextToHapticEvents(null), isEmpty);
       expect(morse.convertTextToHapticEvents(''), isEmpty);
       expect(morse.convertTextToHapticEvents('   '), isEmpty);
-      expect(morse.convertTextToHapticEvents('!!!'), isEmpty);
+      expect(morse.convertTextToHapticEvents('🙂🙂🙂'), isEmpty);
     });
 
     test('the result is unmodifiable', () {
@@ -133,15 +133,15 @@ void main() {
         'E': 'single symbol',
         'SOS': 'multi-letter word',
         'HELLO WORLD': 'multiple words',
-        'AB!': 'trailing unsupported character',
-        '!AB': 'leading unsupported character',
+        'AB🙂': 'trailing unsupported character',
+        '🙂AB': 'leading unsupported character',
         '  AB': 'leading whitespace',
         'AB  ': 'trailing whitespace',
         'A  B': 'doubled space',
         'A   B': 'tripled space',
-        'A!B': 'interior unsupported character',
-        'A !! B': 'word of only unsupported characters',
-        ' A ! B ': 'whitespace and unsupported characters combined',
+        'A🙂B': 'interior unsupported character',
+        'A 🙂🙂 B': 'word of only unsupported characters',
+        ' A 🙂 B ': 'whitespace and unsupported characters combined',
         '123': 'digits',
       };
 
@@ -157,7 +157,7 @@ void main() {
 
     test('a trailing unsupported character adds no dangling gap', () {
       expect(
-        morse.convertTextToHapticEvents('AB!'),
+        morse.convertTextToHapticEvents('AB🙂'),
         morse.convertTextToHapticEvents('AB'),
       );
     });
@@ -178,7 +178,7 @@ void main() {
 
     test('an all-unsupported word does not add a second word gap', () {
       expect(
-        morse.convertTextToHapticEvents('A !! B'),
+        morse.convertTextToHapticEvents('A 🙂🙂 B'),
         morse.convertTextToHapticEvents('A B'),
       );
     });
@@ -197,7 +197,7 @@ void main() {
     test('returns an empty model when there is nothing to encode', () {
       expect(morse.convertTextToModel(null), const HapticModel());
       expect(morse.convertTextToModel(''), const HapticModel());
-      expect(morse.convertTextToModel('!!!'), const HapticModel());
+      expect(morse.convertTextToModel('🙂🙂🙂'), const HapticModel());
     });
 
     test('totalDuration sums every event', () {

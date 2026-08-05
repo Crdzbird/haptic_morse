@@ -60,7 +60,7 @@ void main() {
     test('toMorseString returns null', () {
       expect(''.toMorseString(), isNull);
       expect('   '.toMorseString(), isNull);
-      expect('!!!'.toMorseString(), isNull);
+      expect('🙂🙂🙂'.toMorseString(), isNull);
     });
 
     test('the sequence forms are empty', () {

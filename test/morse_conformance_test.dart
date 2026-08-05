@@ -172,6 +172,72 @@ void main() {
     });
   });
 
+  group('ITU punctuation', () {
+    // ITU-R M.1677-1 section 1.1.3.
+    const punctuation = <String, String>{
+      '.': '.-.-.-',
+      ',': '--..--',
+      ':': '---...',
+      '?': '..--..',
+      "'": '.----.',
+      '-': '-....-',
+      '/': '-..-.',
+      '(': '-.--.',
+      ')': '-.--.-',
+      '"': '.-..-.',
+      '=': '-...-',
+      '+': '.-.-.',
+      '@': '.--.-.',
+    };
+
+    punctuation.forEach((character, expected) {
+      test('$character is "$expected"', () {
+        expect(morse.convertTextToMorseString(character), expected);
+      });
+    });
+
+    test('a sentence with punctuation encodes and decodes', () {
+      const sentence = 'HELLO, WORLD!';
+
+      expect(
+        morse.decodeMorseString(morse.convertTextToMorseString(sentence)),
+        sentence,
+      );
+    });
+  });
+
+  group('no code collides with another', () {
+    // The encoder rejects duplicate *characters*, but two characters mapping
+    // to the same *code* would make decoding ambiguous. This is what keeps the
+    // punctuation and accented tables safe to extend.
+    List<String> codesOf(HapticMorse encoder) => encoder.supportedCharacters
+        .map((c) => encoder.convertTextToMorseString(c)!)
+        .toList();
+
+    test('the default table is collision-free', () {
+      final codes = codesOf(morse);
+
+      expect(codes.toSet(), hasLength(codes.length));
+    });
+
+    test('accented letters collide with nothing in the default table', () {
+      final accented = HapticMorse.custom(
+        additionalSymbols: HapticMorse.accentedLetters,
+      );
+      final codes = codesOf(accented);
+
+      // À and Å deliberately share a code, so exactly one duplicate is
+      // expected — any more means a genuine clash was introduced.
+      expect(codes.length - codes.toSet().length, 1);
+    });
+
+    test('every default code is a valid dot/dash string', () {
+      for (final code in codesOf(morse)) {
+        expect(code, matches(RegExp(r'^[.\-]+$')));
+      }
+    });
+  });
+
   group('round-trip property', () {
     /// Decodes using only the emitted Morse string and the ITU table, with no
     /// reference to the encoder's internals.

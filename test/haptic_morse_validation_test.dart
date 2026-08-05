@@ -54,6 +54,111 @@ void main() {
     });
   });
 
+  group('a map and its reference must be supplied together', () {
+    test('charMap without charReference', () {
+      // Previously this paired the custom map against the default A-Z
+      // reference, which either threw a confusing length error or silently
+      // encoded the wrong characters.
+      expect(
+        () => HapticMorse.custom(charMap: ['.-', '--']),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            contains('supplied together'),
+          ),
+        ),
+      );
+    });
+
+    test('charReference without charMap', () {
+      expect(
+        () => HapticMorse.custom(charReference: 'AB'),
+        throwsArgumentError,
+      );
+    });
+
+    test('numericMap without numericReference', () {
+      expect(
+        () => HapticMorse.custom(numericMap: ['-----']),
+        throwsArgumentError,
+      );
+    });
+
+    test('numericReference without numericMap', () {
+      expect(
+        () => HapticMorse.custom(numericReference: '01'),
+        throwsArgumentError,
+      );
+    });
+
+    test('neither is fine — the defaults are used', () {
+      expect(HapticMorse.custom().convertTextToMorseString('A'), '.-');
+    });
+  });
+
+  group('additionalSymbols', () {
+    test('merges on top of the default table', () {
+      final morse = HapticMorse.custom(
+        additionalSymbols: HapticMorse.accentedLetters,
+      );
+
+      expect(morse.convertTextToMorseString('Ñ'), '--.--');
+      expect(morse.convertTextToMorseString('A'), '.-'); // still standard
+    });
+
+    test('can override a default entry', () {
+      final morse = HapticMorse.custom(additionalSymbols: const {'A': '----'});
+
+      expect(morse.convertTextToMorseString('A'), '----');
+    });
+
+    test('is case-insensitive', () {
+      final morse = HapticMorse.custom(additionalSymbols: const {'ñ': '--.--'});
+
+      expect(morse.convertTextToMorseString('Ñ'), '--.--');
+      expect(morse.convertTextToMorseString('ñ'), '--.--');
+    });
+
+    test('rejects a multi-character key', () {
+      // Named prosigns such as <SK> would need multi-character keys.
+      expect(
+        () => HapticMorse.custom(additionalSymbols: const {'SK': '...-.-'}),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects an invalid pattern', () {
+      expect(
+        () => HapticMorse.custom(additionalSymbols: const {'Ñ': '--x--'}),
+        throwsArgumentError,
+      );
+      expect(
+        () => HapticMorse.custom(additionalSymbols: const {'Ñ': ''}),
+        throwsArgumentError,
+      );
+    });
+
+    test('respects custom dot and dash symbols', () {
+      expect(
+        () => HapticMorse.custom(
+          symbolReference: '0',
+          dashReference: '1',
+          additionalSymbols: const {'Ñ': '--.--'},
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        HapticMorse.custom(
+          symbolReference: '0',
+          dashReference: '1',
+          additionalSymbols: const {'Ñ': '11011'},
+        ).convertTextToMorseString('Ñ'),
+        '11011',
+      );
+    });
+  });
+
   group('references must not repeat a character', () {
     test('duplicate character', () {
       expect(

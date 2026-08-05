@@ -45,6 +45,23 @@ every renamed member.
   `.hasAmplitudeControl`, so an app can fall back to showing the Morse code on
   a device that cannot reproduce the timing. Nothing in 1.x exposed a
   capability check, so a haptic-only message was simply unreadable there.
+- **Punctuation in the default table.** `. , : ? ' - / ( ) " = + @` from
+  ITU-R M.1677-1, plus the conventional `& ! ; _ $`. These were previously
+  skipped as unmapped characters.
+- **`HapticMorse.accentedLetters`**, an opt-in map of À Å Ä Ç È É Ñ Ö Ü for the
+  new `additionalSymbols` argument. Kept opt-in because they are regional
+  convention rather than ITU-normative.
+- **`additionalSymbols`** on `HapticMorse.custom` and `HapticMorse.atSpeed`,
+  merging extra character-to-pattern entries on top of the resolved table.
+- **Decoding: `decodeMorseString` and `decodeEvents`.** `decodeEvents` needs no
+  threshold guessing, since the events are already typed — symbol and word
+  boundaries are exact.
+- **`HapticMorse.atSpeed`**, expressing timing in words per minute
+  (`unit = 1200 / wpm`), with **Farnsworth timing** via
+  `effectiveWordsPerMinute`: symbols keep their character-speed shape while the
+  letter and word gaps stretch, which is what makes Morse readable through skin
+  without distorting each character.
+- `supportedCharacters`, listing everything an encoder can represent.
 - A conformance suite checking the output against ITU-R M.1677-1: the
   1/3/1/3/7 unit ratios, the standard `PARIS` word measuring exactly 50 units,
   the `1200/dot` words-per-minute formula, the full ITU code table, and an
@@ -83,6 +100,9 @@ every renamed member.
 - CI runs the core test suite on the plain Dart SDK
   (`dart test --exclude-tags flutter`), which fails if anything in the core
   starts importing Flutter.
+- Supplying `charMap` without `charReference` (or either numeric counterpart)
+  now throws instead of silently pairing the custom map against the default
+  reference and encoding the wrong characters.
 
 # 1.0.6
 

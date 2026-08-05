@@ -60,7 +60,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), '!!!');
+    await tester.enterText(find.byType(TextField), '🙂🙂🙂');
     await tester.tap(find.text('Play'));
     await tester.pumpAndSettle();
 
