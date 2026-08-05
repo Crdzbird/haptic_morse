@@ -14,7 +14,7 @@ void main() {
 
   setUp(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        .setMockMethodCallHandler(channel, (methodCall) async {
       log.add(methodCall);
       return null;
     });
@@ -34,24 +34,25 @@ void main() {
     test('passes arguments through unchanged', () async {
       await const HapticVibration().vibrate(
         amplitude: 1,
-        duration: 500,
         intensities: [500],
         pattern: [100, 200, 300],
         repeat: 0,
-        sharpness: 0.5,
       );
 
       expect(
         log,
         contains(
-          isMethodCall('vibrate', arguments: {
-            'duration': 500,
-            'pattern': [100, 200, 300],
-            'repeat': 0,
-            'intensities': [500],
-            'amplitude': 1,
-            'sharpness': 0.5,
-          }),
+          isMethodCall(
+            'vibrate',
+            arguments: {
+              'duration': 500,
+              'pattern': [100, 200, 300],
+              'repeat': 0,
+              'intensities': [500],
+              'amplitude': 1,
+              'sharpness': 0.5,
+            },
+          ),
         ),
       );
     });
@@ -111,7 +112,7 @@ void main() {
   group('capability checks', () {
     setUp(() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+          .setMockMethodCallHandler(channel, (methodCall) async {
         log.add(methodCall);
         return true;
       });

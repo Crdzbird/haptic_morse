@@ -18,6 +18,11 @@ homepage: https://github.com/Crdzbird/haptic_morse
 environment:
   sdk: ^3.0.0
 
+dependencies:
+  characters: ^1.4.0
+  meta: ^1.16.0
+  vibration: ^3.2.0
+
 dev_dependencies:
   flutter:
     sdk: flutter
@@ -25,6 +30,4 @@ dev_dependencies:
     sdk: flutter
   lints: ^6.0.0
   test: ^1.25.0
-dependencies:
-  characters: ^1.4.0
-  vibration: ^3.1.3
+  very_good_analysis: ^10.3.0

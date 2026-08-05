@@ -277,9 +277,12 @@ builds on it.
   speed — Farnsworth timing keeps each character's rhythm recognizable while
   slowing the message down.
 - **Very short units may not be perceptible.** Durations are validated as
-  positive, not as perceptible; eccentric-rotating-mass motors need tens of
-  milliseconds to spin up, so a dot below roughly 20–30ms may not be felt at
-  all on some hardware. Test on target devices.
+  positive, not as perceptible. Check with `events.isLikelyPerceptible`, which
+  flags vibrations under `HapticEvent.minimumPerceptibleMilliseconds` (20ms,
+  roughly 60 WPM). It is a heuristic, not a specification — an
+  eccentric-rotating-mass motor needs tens of milliseconds to spin up while an
+  LRA responds faster — so nothing is rejected on its basis. Test on target
+  devices.
 - **Every vibration is sent with Android's `USAGE_ALARM`.** That is hardcoded
   in `package:vibration`, not chosen here, and it means playback is categorized
   as an alarm rather than as accessibility or notification output. If that
@@ -313,13 +316,15 @@ builds on it.
 
 Sealed: `HapticDot`, `HapticDash`, `HapticSymbolGap`, `HapticLetterGap`,
 `HapticWordGap`. Each has `duration`, `isVibration`, `toJson()`, and value
-equality. On `List<HapticEvent>`: `toVibrationPattern()` and `totalDuration`.
+equality. On `List<HapticEvent>`: `toVibrationPattern()`, `totalDuration`,
+`imperceptibleEvents`, and `isLikelyPerceptible`.
 
 ### `HapticModel`
 
 `text`, `morseCode`, `events` (unmodifiable), `totalDuration`,
 `toVibrationPattern()`, `copyWith`, `toJson`, `encode`, `fromMap`, `fromJson`,
-plus `==`/`hashCode`.
+plus `==`/`hashCode`. `HapticModel.empty` is the constant empty instance; the
+main constructor copies its `events` list and so is not `const`.
 
 ### `HapticVibration`
 
@@ -363,7 +368,7 @@ Also note:
 
 ## 🧪 Test Coverage
 
-✅ **283 of 285 lines (99.3%)**, verified in CI.
+✅ **290 of 292 lines (99.3%)**, verified in CI.
 
 ```bash
 flutter test --coverage

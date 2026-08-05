@@ -48,7 +48,7 @@ void main() {
 
     test('a custom alphabet resolves through the extension', () {
       final custom = HapticMorse.custom(
-        charMap: ['.-', '--'],
+        charMap: const ['.-', '--'],
         charReference: '💧🔥',
       );
 
@@ -66,7 +66,7 @@ void main() {
     test('the sequence forms are empty', () {
       expect(''.toHapticEvents(), isEmpty);
       expect(''.toVibrationPattern(), isEmpty);
-      expect(''.toMorseModel(), const HapticModel());
+      expect(''.toMorseModel(), HapticModel.empty);
     });
   });
 

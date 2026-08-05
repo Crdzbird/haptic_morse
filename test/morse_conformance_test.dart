@@ -153,11 +153,11 @@ void main() {
       '9': '----.',
     };
 
-    table.forEach((character, expected) {
+    for (final MapEntry(key: character, value: expected) in table.entries) {
       test('$character is "$expected"', () {
         expect(morse.convertTextToMorseString(character), expected);
       });
-    });
+    }
 
     test('every code is unique', () {
       expect(table.values.toSet(), hasLength(table.length));
@@ -190,11 +190,12 @@ void main() {
       '@': '.--.-.',
     };
 
-    punctuation.forEach((character, expected) {
+    for (final MapEntry(key: character, value: expected)
+        in punctuation.entries) {
       test('$character is "$expected"', () {
         expect(morse.convertTextToMorseString(character), expected);
       });
-    });
+    }
 
     test('a sentence with punctuation encodes and decodes', () {
       const sentence = 'HELLO, WORLD!';

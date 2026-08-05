@@ -193,7 +193,7 @@ void main() {
     test('accepts a custom alphabet', () {
       final morse = HapticMorse.atSpeed(
         wordsPerMinute: 20,
-        charMap: ['.-', '--'],
+        charMap: const ['.-', '--'],
         charReference: '💧🔥',
       );
 

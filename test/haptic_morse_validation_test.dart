@@ -10,7 +10,7 @@ void main() {
     test('charMap shorter than charReference', () {
       // Previously 'C' was silently dropped from all output.
       expect(
-        () => HapticMorse.custom(charMap: ['.-'], charReference: 'ABC'),
+        () => HapticMorse.custom(charMap: const ['.-'], charReference: 'ABC'),
         throwsA(
           isA<ArgumentError>().having(
             (e) => e.message,
@@ -24,7 +24,7 @@ void main() {
     test('charMap longer than charReference', () {
       expect(
         () => HapticMorse.custom(
-          charMap: ['.-', '-...', '-.-.'],
+          charMap: const ['.-', '-...', '-.-.'],
           charReference: 'AB',
         ),
         throwsArgumentError,
@@ -34,7 +34,7 @@ void main() {
     test('numericMap and numericReference must match too', () {
       expect(
         () => HapticMorse.custom(
-          numericMap: ['-----'],
+          numericMap: const ['-----'],
           numericReference: '01',
         ),
         throwsArgumentError,
@@ -46,7 +46,7 @@ void main() {
       // must be accepted.
       expect(
         () => HapticMorse.custom(
-          charMap: ['.-', '--'],
+          charMap: const ['.-', '--'],
           charReference: '💧🔥',
         ),
         returnsNormally,
@@ -60,7 +60,7 @@ void main() {
       // reference, which either threw a confusing length error or silently
       // encoded the wrong characters.
       expect(
-        () => HapticMorse.custom(charMap: ['.-', '--']),
+        () => HapticMorse.custom(charMap: const ['.-', '--']),
         throwsA(
           isA<ArgumentError>().having(
             (e) => e.message,
@@ -80,7 +80,7 @@ void main() {
 
     test('numericMap without numericReference', () {
       expect(
-        () => HapticMorse.custom(numericMap: ['-----']),
+        () => HapticMorse.custom(numericMap: const ['-----']),
         throwsArgumentError,
       );
     });
@@ -162,14 +162,20 @@ void main() {
   group('references must not repeat a character', () {
     test('duplicate character', () {
       expect(
-        () => HapticMorse.custom(charMap: ['.-', '--'], charReference: 'AA'),
+        () => HapticMorse.custom(
+          charMap: const ['.-', '--'],
+          charReference: 'AA',
+        ),
         throwsArgumentError,
       );
     });
 
     test('duplicate differing only in case', () {
       expect(
-        () => HapticMorse.custom(charMap: ['.-', '--'], charReference: 'aA'),
+        () => HapticMorse.custom(
+          charMap: const ['.-', '--'],
+          charReference: 'aA',
+        ),
         throwsArgumentError,
       );
     });
@@ -178,7 +184,7 @@ void main() {
   group('patterns must be spelled with the dot and dash symbols', () {
     test('rejects a stray character', () {
       expect(
-        () => HapticMorse.custom(charMap: ['.x'], charReference: 'A'),
+        () => HapticMorse.custom(charMap: const ['.x'], charReference: 'A'),
         throwsA(
           isA<ArgumentError>()
               .having((e) => e.message, 'message', contains('x')),
@@ -190,7 +196,7 @@ void main() {
         () {
       // Previously '💧💧' silently became four dashes.
       expect(
-        () => HapticMorse.custom(charMap: ['💧💧'], charReference: 'A'),
+        () => HapticMorse.custom(charMap: const ['💧💧'], charReference: 'A'),
         throwsArgumentError,
       );
     });
@@ -199,7 +205,7 @@ void main() {
       final custom = HapticMorse.custom(
         symbolReference: '💧',
         dashReference: '🔥',
-        charMap: ['💧🔥'],
+        charMap: const ['💧🔥'],
         charReference: 'A',
       );
 
@@ -212,7 +218,7 @@ void main() {
 
     test('rejects an empty pattern', () {
       expect(
-        () => HapticMorse.custom(charMap: [''], charReference: 'A'),
+        () => HapticMorse.custom(charMap: const [''], charReference: 'A'),
         throwsArgumentError,
       );
     });
@@ -238,7 +244,7 @@ void main() {
       expect(
         () => HapticMorse.custom(
           symbolReference: '💧',
-          charMap: ['💧'],
+          charMap: const ['💧'],
           charReference: 'A',
         ),
         returnsNormally,

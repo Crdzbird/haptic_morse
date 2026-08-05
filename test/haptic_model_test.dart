@@ -6,15 +6,15 @@ import 'package:test/test.dart';
 void main() {
   const morse = HapticMorse();
 
-  const sample = HapticModel(
+  final sample = HapticModel(
     text: 'A',
     morseCode: '.-',
-    events: [HapticDot(100), HapticSymbolGap(100), HapticDash(300)],
+    events: const [HapticDot(100), HapticSymbolGap(100), HapticDash(300)],
   );
 
   group('construction', () {
     test('defaults to empty', () {
-      const model = HapticModel();
+      final model = HapticModel();
 
       expect(model.text, '');
       expect(model.morseCode, '');
@@ -51,7 +51,7 @@ void main() {
 
     test('events are compared element-wise, not by identity', () {
       final a = HapticModel(
-        events: [const HapticDot(100), const HapticDash(300)],
+        events: const [HapticDot(100), HapticDash(300)],
       );
       final b = HapticModel(
         events: [const HapticDot(100), const HapticDash(300)].toList(),
@@ -74,6 +74,47 @@ void main() {
       expect(sample.toString(), contains('A'));
       expect(sample.toString(), contains('.-'));
       expect(sample.toString(), contains('500'));
+    });
+  });
+
+  group('HapticModel.empty', () {
+    test('is the constant empty model', () {
+      expect(HapticModel.empty.text, '');
+      expect(HapticModel.empty.morseCode, '');
+      expect(HapticModel.empty.events, isEmpty);
+    });
+
+    test('is identical across uses, so it can be compared by identity', () {
+      expect(identical(HapticModel.empty, HapticModel.empty), isTrue);
+      expect(
+        identical(morse.convertTextToModel(''), HapticModel.empty),
+        isTrue,
+      );
+    });
+
+    test('equals a freshly built empty model', () {
+      expect(HapticModel.empty, equals(HapticModel()));
+    });
+  });
+
+  group('the constructor copies its events', () {
+    test('mutating the source list afterwards does not reach the model', () {
+      final source = [const HapticDot(100), const HapticDash(300)];
+      final model = HapticModel(events: source);
+
+      source.add(const HapticDot(999));
+      source[0] = const HapticDash(1);
+
+      expect(model.events, [const HapticDot(100), const HapticDash(300)]);
+    });
+
+    test('copyWith copies too', () {
+      final source = [const HapticDot(100)];
+      final model = HapticModel().copyWith(events: source);
+
+      source.clear();
+
+      expect(model.events, [const HapticDot(100)]);
     });
   });
 
@@ -118,10 +159,10 @@ void main() {
 
       expect(
         copy,
-        const HapticModel(
+        HapticModel(
           text: 'E',
           morseCode: '.',
-          events: [HapticDot(100)],
+          events: const [HapticDot(100)],
         ),
       );
     });
@@ -163,28 +204,31 @@ void main() {
     });
 
     test('fromJson treats null and empty as an empty model', () {
-      expect(HapticModel.fromJson(null), const HapticModel());
-      expect(HapticModel.fromJson(''), const HapticModel());
-      expect(HapticModel.fromMap(null), const HapticModel());
+      expect(HapticModel.fromJson(null), HapticModel.empty);
+      expect(HapticModel.fromJson(''), HapticModel.empty);
+      expect(HapticModel.fromMap(null), HapticModel.empty);
     });
 
     test('fromMap tolerates missing keys', () {
-      expect(HapticModel.fromMap(const {}), const HapticModel());
+      expect(HapticModel.fromMap(const {}), HapticModel.empty);
       expect(
         HapticModel.fromMap(const {'text': 'A'}),
-        const HapticModel(text: 'A'),
+        HapticModel(text: 'A'),
       );
     });
 
     test('fromJson rejects unsupported input types', () {
       expect(() => HapticModel.fromJson(42), throwsArgumentError);
       expect(() => HapticModel.fromJson(true), throwsArgumentError);
-      expect(() => HapticModel.fromJson(<int>[1, 2]), throwsArgumentError);
+      expect(
+        () => HapticModel.fromJson(const <int>[1, 2]),
+        throwsArgumentError,
+      );
     });
 
     test('fromMap rejects a malformed event', () {
       expect(
-        () => HapticModel.fromMap({
+        () => HapticModel.fromMap(const {
           'events': [
             {'type': 'wobble', 'duration': 1},
           ],

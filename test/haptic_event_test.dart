@@ -33,7 +33,7 @@ void main() {
 
     test('toString names the type and duration', () {
       expect(const HapticDot(100).toString(), contains('100'));
-      expect(const HapticDot(100).toString(), contains('HapticDot'));
+      expect(const HapticDot(100).toString(), contains('dot'));
     });
   });
 
@@ -130,6 +130,69 @@ void main() {
       const events = <HapticEvent>[HapticWordGap(700), HapticDot(100)];
 
       expect(events.toVibrationPattern(), [700, 100]);
+    });
+  });
+
+  group('perceptibility', () {
+    test('standard timings are comfortably above the floor', () {
+      expect('SOS'.toHapticEvents().isLikelyPerceptible, isTrue);
+      expect('SOS'.toHapticEvents().imperceptibleEvents, isEmpty);
+    });
+
+    test('flags vibrations shorter than the floor', () {
+      final tooFast = HapticMorse.custom(dotDuration: 5, dashDuration: 15);
+      final events = 'A'.toHapticEvents(tooFast);
+
+      expect(events.isLikelyPerceptible, isFalse);
+      // Both the dot and the dash are under 20ms.
+      expect(events.imperceptibleEvents, hasLength(2));
+    });
+
+    test('ignores short gaps, which are a legibility issue not a haptic one',
+        () {
+      final morse = HapticMorse.custom(
+        dotDuration: 100,
+        dashDuration: 300,
+        gapSymbolDuration: 1,
+        gapLetterDuration: 1,
+        gapWordDuration: 1,
+      );
+
+      expect('A B'.toHapticEvents(morse).isLikelyPerceptible, isTrue);
+      expect('A B'.toHapticEvents(morse).imperceptibleEvents, isEmpty);
+    });
+
+    test('the floor sits around 60 WPM', () {
+      // 1200/60 = 20ms, exactly the threshold.
+      expect(
+        'SOS'
+            .toHapticEvents(HapticMorse.atSpeed(wordsPerMinute: 60))
+            .isLikelyPerceptible,
+        isTrue,
+      );
+      expect(
+        'SOS'
+            .toHapticEvents(HapticMorse.atSpeed(wordsPerMinute: 70))
+            .isLikelyPerceptible,
+        isFalse,
+      );
+    });
+
+    test('an empty sequence is trivially perceptible', () {
+      expect(const <HapticEvent>[].isLikelyPerceptible, isTrue);
+    });
+
+    test('the threshold is exclusive', () {
+      const threshold = HapticEvent.minimumPerceptibleMilliseconds;
+
+      expect(
+        [const HapticDot(threshold)].isLikelyPerceptible,
+        isTrue,
+      );
+      expect(
+        [const HapticDot(threshold - 1)].isLikelyPerceptible,
+        isFalse,
+      );
     });
   });
 

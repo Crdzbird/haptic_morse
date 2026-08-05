@@ -1,3 +1,4 @@
+// An example is a script: print is the output channel.
 // ignore_for_file: avoid_print
 
 // This example is pure Dart — run it with `dart run`:
@@ -54,14 +55,18 @@ void main() {
   // Text is segmented into grapheme clusters, so multi-code-unit characters
   // count as one.
   final emoji = HapticMorse.custom(
-    charMap: ['.-', '--'],
+    charMap: const ['.-', '--'],
     charReference: '💧🔥',
   );
   print(emoji.convertTextToMorseString('💧🔥')); // .- --
 
   // 7. Misconfiguration fails loudly instead of silently dropping letters.
   try {
-    HapticMorse.custom(charMap: ['.-'], charReference: 'ABC');
+    HapticMorse.custom(charMap: const ['.-'], charReference: 'ABC');
+    // Catching an Error is normally a mistake — it signals a programming bug
+    // rather than a runtime condition. Here that is exactly the point being
+    // demonstrated, so the rule is suppressed for this one clause.
+    // ignore: avoid_catching_errors
   } on ArgumentError catch (e) {
     print('rejected: ${e.message}');
   }
@@ -83,7 +88,8 @@ void main() {
   //     standard word "PARIS" plus a word space measures exactly 50 units.
   final fast20 = HapticMorse.atSpeed(wordsPerMinute: 20);
   print(
-      '20 WPM dot = ${fast20.convertTextToHapticEvents('E').single.duration}ms');
+    '20 WPM dot = ${fast20.convertTextToHapticEvents('E').single.duration}ms',
+  );
 
   // 12. Farnsworth timing: crisp characters, stretched gaps. This is how you
   //     make Morse readable through skin without distorting each character.

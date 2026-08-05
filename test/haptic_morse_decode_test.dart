@@ -63,7 +63,7 @@ void main() {
       expect(morse.decodeMorseString('........'), isNull);
     });
 
-    test('uses the encoder\'s own alphabet', () {
+    test("uses the encoder's own alphabet", () {
       final binary = HapticMorse.custom(
         symbolReference: '0',
         dashReference: '1',
@@ -76,7 +76,7 @@ void main() {
 
     test('decodes a custom alphabet', () {
       final custom = HapticMorse.custom(
-        charMap: ['.-', '--'],
+        charMap: const ['.-', '--'],
         charReference: '💧🔥',
       );
 

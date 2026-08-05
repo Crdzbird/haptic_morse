@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 /// A single element of a haptic Morse sequence.
 ///
 /// A sequence produced by `HapticMorse` strictly alternates between vibration
@@ -20,9 +22,34 @@
 ///   print('$label for ${event.duration}ms');
 /// }
 /// ```
+@immutable
 sealed class HapticEvent {
   /// Creates an event lasting [duration] milliseconds.
   const HapticEvent(this.duration);
+
+  /// Vibrations shorter than this are unlikely to be felt.
+  ///
+  /// This is a **heuristic, not a specification**. An eccentric-rotating-mass
+  /// motor needs tens of milliseconds to spin up and down, so a very short
+  /// pulse never reaches a perceptible amplitude; linear resonant actuators
+  /// and Taptic-style hardware respond faster. The real floor is device
+  /// specific, which is why nothing in this package rejects a shorter
+  /// duration — a sequence may legitimately be rendered, analysed, or sent
+  /// somewhere other than a motor.
+  ///
+  /// Use it as an advisory check on timings you did not choose yourself:
+  ///
+  /// ```dart
+  /// final events = text.toHapticEvents(morse);
+  /// if (!events.isLikelyPerceptible) {
+  ///   // Too fast for this hardware; slow down or show the code instead.
+  /// }
+  /// ```
+  ///
+  /// At the standard `1200 / wpm` unit this corresponds to roughly 60 words
+  /// per minute, well above conversational Morse and far above anything
+  /// readable through skin.
+  static const int minimumPerceptibleMilliseconds = 20;
 
   /// How long this event lasts, in milliseconds. Always positive.
   final int duration;
@@ -80,7 +107,7 @@ sealed class HapticEvent {
   int get hashCode => Object.hash(runtimeType, duration);
 
   @override
-  String toString() => '$runtimeType(${duration}ms)';
+  String toString() => 'HapticEvent($type, ${duration}ms)';
 }
 
 /// A short vibration — the `.` of Morse code.
@@ -186,4 +213,23 @@ extension HapticEventPattern on List<HapticEvent> {
 
   /// The total duration of this sequence in milliseconds.
   int get totalDuration => fold(0, (sum, event) => sum + event.duration);
+
+  /// Vibrations in this sequence too short to be reliably felt.
+  ///
+  /// Gaps are ignored: a gap that is too short makes two symbols run together,
+  /// which is a legibility problem rather than a perceptibility one, and it is
+  /// already prevented by the standard timing ratios.
+  ///
+  /// See [HapticEvent.minimumPerceptibleMilliseconds] for what this does and
+  /// does not promise.
+  Iterable<HapticEvent> get imperceptibleEvents => where(
+        (event) =>
+            event.isVibration &&
+            event.duration < HapticEvent.minimumPerceptibleMilliseconds,
+      );
+
+  /// Whether every vibration in this sequence is long enough to be felt.
+  ///
+  /// A heuristic — see [HapticEvent.minimumPerceptibleMilliseconds].
+  bool get isLikelyPerceptible => imperceptibleEvents.isEmpty;
 }

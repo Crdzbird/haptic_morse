@@ -1,4 +1,5 @@
 import 'package:characters/characters.dart';
+import 'package:meta/meta.dart';
 
 import '../model/haptic_event.dart';
 import '../model/haptic_model.dart';
@@ -20,6 +21,7 @@ import '../model/haptic_model.dart';
 /// Text is segmented into user-perceived characters (grapheme clusters), so
 /// characters outside the Basic Multilingual Plane — including emoji with
 /// variation selectors or zero-width joiners — work in a custom alphabet.
+@immutable
 final class HapticMorse {
   /// Creates an encoder for standard International Morse Code with standard
   /// timing ratios of 1/3/1/3/7 units, giving 12 words per minute.
@@ -309,7 +311,7 @@ final class HapticMorse {
   /// the two representations.
   HapticModel convertTextToModel(String? input) {
     final words = _tokenize(input);
-    if (words.isEmpty) return const HapticModel();
+    if (words.isEmpty) return HapticModel.empty;
     return HapticModel(
       text: input ?? '',
       morseCode: _buildMorseString(words),

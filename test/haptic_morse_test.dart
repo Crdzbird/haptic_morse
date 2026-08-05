@@ -145,14 +145,14 @@ void main() {
         '123': 'digits',
       };
 
-      cases.forEach((input, description) {
+      for (final MapEntry(key: input, value: description) in cases.entries) {
         test('"$input" — $description', () {
           expectWellFormed(
             morse.convertTextToHapticEvents(input),
             reason: description,
           );
         });
-      });
+      }
     });
 
     test('a trailing unsupported character adds no dangling gap', () {
@@ -195,9 +195,9 @@ void main() {
     });
 
     test('returns an empty model when there is nothing to encode', () {
-      expect(morse.convertTextToModel(null), const HapticModel());
-      expect(morse.convertTextToModel(''), const HapticModel());
-      expect(morse.convertTextToModel('🙂🙂🙂'), const HapticModel());
+      expect(morse.convertTextToModel(null), HapticModel.empty);
+      expect(morse.convertTextToModel(''), HapticModel.empty);
+      expect(morse.convertTextToModel('🙂🙂🙂'), HapticModel.empty);
     });
 
     test('totalDuration sums every event', () {
@@ -234,7 +234,14 @@ void main() {
 
     test('custom numeric map', () {
       final custom = HapticMorse.custom(
-        numericMap: ['-----', '.----', '..---', '...--', '....-', '.....'],
+        numericMap: const [
+          '-----',
+          '.----',
+          '..---',
+          '...--',
+          '....-',
+          '.....',
+        ],
         numericReference: '012345',
       );
 
@@ -244,7 +251,7 @@ void main() {
     test('numeric reference takes precedence over the alphabet on overlap', () {
       final custom = HapticMorse.custom(
         numericReference: 'A',
-        numericMap: ['-----'],
+        numericMap: const ['-----'],
       );
 
       expect(custom.convertTextToMorseString('A'), '-----');
@@ -253,7 +260,7 @@ void main() {
     test('custom lookups are case-insensitive', () {
       final custom = HapticMorse.custom(
         numericReference: 'ab',
-        numericMap: ['---', '...'],
+        numericMap: const ['---', '...'],
       );
 
       expect(custom.convertTextToMorseString('a'), '---');
@@ -264,10 +271,10 @@ void main() {
     test('a reference character that is a regex metacharacter is literal', () {
       final custom = HapticMorse.custom(
         numericReference: r'.$',
-        numericMap: ['-', '..'],
+        numericMap: const ['-', '..'],
       );
 
-      expect(custom.convertTextToMorseString(r'.'), '-');
+      expect(custom.convertTextToMorseString('.'), '-');
       expect(custom.convertTextToMorseString(r'$'), '..');
       // Must not match every character the way an unescaped '.' pattern did.
       expect(custom.convertTextToMorseString('Z'), '--..');
@@ -277,7 +284,7 @@ void main() {
       final custom = HapticMorse.custom(
         symbolReference: '0',
         dashReference: '1',
-        charMap: ['01', '1000'],
+        charMap: const ['01', '1000'],
         charReference: 'AB',
       );
 
@@ -293,7 +300,7 @@ void main() {
   group('grapheme handling', () {
     test('non-BMP characters work in a reference', () {
       final custom = HapticMorse.custom(
-        charMap: ['.-', '--'],
+        charMap: const ['.-', '--'],
         charReference: '💧🔥',
       );
 
@@ -311,7 +318,7 @@ void main() {
 
     test('emoji with a variation selector count as one character', () {
       final custom = HapticMorse.custom(
-        charMap: ['.-'],
+        charMap: const ['.-'],
         charReference: '☀️',
       );
 
@@ -320,7 +327,7 @@ void main() {
 
     test('zero-width-joiner sequences count as one character', () {
       final custom = HapticMorse.custom(
-        charMap: ['-.-'],
+        charMap: const ['-.-'],
         charReference: '👩‍👩‍👧',
       );
 
@@ -329,7 +336,7 @@ void main() {
 
     test('BMP scripts keep working', () {
       final custom = HapticMorse.custom(
-        charMap: ['.-', '-...', '..--', '.-.-'],
+        charMap: const ['.-', '-...', '..--', '.-.-'],
         charReference: 'AB日水',
       );
 

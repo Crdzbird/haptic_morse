@@ -62,6 +62,13 @@ every renamed member.
   letter and word gaps stretch, which is what makes Morse readable through skin
   without distorting each character.
 - `supportedCharacters`, listing everything an encoder can represent.
+- `HapticModel.empty`, the constant empty model. The main constructor is no
+  longer `const`, because it now copies its `events` list.
+- `HapticEvent.minimumPerceptibleMilliseconds` plus
+  `List<HapticEvent>.imperceptibleEvents` and `.isLikelyPerceptible`, an
+  advisory check for timings too short to be felt. Deliberately advisory and
+  not enforced: the real floor is device specific, and a sequence may be
+  rendered or analysed rather than played.
 - A conformance suite checking the output against ITU-R M.1677-1: the
   1/3/1/3/7 unit ratios, the standard `PARIS` word measuring exactly 50 units,
   the `1200/dot` words-per-minute formula, the full ITU code table, and an
@@ -103,6 +110,16 @@ every renamed member.
 - Supplying `charMap` without `charReference` (or either numeric counterpart)
   now throws instead of silently pairing the custom map against the default
   reference and encoding the wrong characters.
+- **`HapticModel` copies the `events` list it is given**, so later changes to
+  the caller's list no longer reach the model. This is why the main
+  constructor is no longer `const`; use `HapticModel.empty` where a constant
+  is needed.
+- Analysis moved to `very_good_analysis`, with `always_use_package_imports`
+  disabled and the reason documented in `analysis_options.yaml`.
+- `vibration` bumped to `^3.2.0`. Its pattern convention was re-verified
+  against 3.2.0's Android and (newly Swift-Package-Manager-based) iOS sources
+  before the bump; index 0 is still an off delay.
+- Added `meta` as a dependency; the value types are now `@immutable`.
 
 # 1.0.6
 

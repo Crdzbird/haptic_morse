@@ -34,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
   static const _haptics = HapticVibration();
 
   final _controller = TextEditingController(text: 'HOLA');
-  HapticModel _message = const HapticModel();
+  HapticModel _message = HapticModel.empty;
 
   /// Null until the capability check completes.
   bool? _canPlayPatterns;

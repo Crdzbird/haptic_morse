@@ -1,3 +1,6 @@
+import 'package:haptic_morse/haptic_morse.dart' show HapticModel;
+import 'package:haptic_morse/src/model/haptic_model.dart' show HapticModel;
+import 'package:meta/meta.dart';
 import 'package:vibration/vibration.dart';
 
 import '../model/haptic_event.dart';
@@ -17,6 +20,7 @@ import 'haptic_morse.dart';
 /// ```
 ///
 /// Supported on Android and iOS only.
+@immutable
 final class HapticVibration {
   /// Creates a vibration controller.
   const HapticVibration();
